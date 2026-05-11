@@ -138,19 +138,19 @@ body {
 }
 
 .search-input {
-  flex: 1;
-  padding: 8px 10px;
-  border-radius: 10px;
-  border: 1px solid #d1d5db;
+  height: 32px;
   font-size: 14px;
+  padding: 0 8px;
+  width: 120px; /* było pewnie ~180–200 */
 }
 
 .filter-select {
-  padding: 8px 10px;
-  border-radius: 10px;
-  border: 1px solid #d1d5db;
-  background: #f3f4f6;
-  font-size: 13px;
+  height: 32px;
+  font-size: 14px;
+  padding: 0 6px;
+  width: 110px; /* było za szerokie */
+}
+
 }
 
 .filter-btn {

@@ -1028,7 +1028,7 @@ function gerarRelatorio() {
       minute: "2-digit"
     });
 
-  let texto = "📋 RELATÓRIO DE ENCOMENDA\n${dataFormatada}\n================\n\n";
+let texto = `📋 RELATÓRIO DE ENCOMENDA\n${dataFormatada}\n================\n\n`;
 
   const grupos = {};
 

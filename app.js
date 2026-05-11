@@ -1019,8 +1019,16 @@ document.getElementById("btnGeneruj").addEventListener("click", () => {
 function gerarRelatorio() {
   const tabela = document.getElementById("tabelaRelatorio");
   tabela.innerHTML = "";
+    const agora = new Date();
+    const dataFormatada = agora.toLocaleString("pt-PT", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
 
-  let texto = "📋 RELATÓRIO DE ENCOMENDA\n============================\n\n";
+  let texto = "📋 RELATÓRIO DE ENCOMENDA\n${dataFormatada}\n================\n\n";
 
   const grupos = {};
 

@@ -1,0 +1,2090 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Compras Gastro - Web App</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Custom configurations and imports for fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0f172a; /* Deep Slate Background */
+            color: #f1f5f9;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .monospace {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        /* Smooth state transitions */
+        .tab-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        /* Active nav item indicator bar */
+        .active-indicator {
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 24px;
+            height: 3px;
+            border-radius: 9999px;
+            background-color: #38bdf8;
+        }
+    </style>
+</head>
+<body class="safe-bottom select-none">
+    
+    <!-- MAIN CONTAINER -->
+    <div id="app" class="flex flex-col min-h-screen pb-20 md:pb-0 md:pl-64">
+
+        <!-- NAV BAR / SIDEBAR (Responsive sidebar for desktop and bottom bar for mobile) -->
+        <aside class="hidden md:flex flex-col fixed left-0 top-0 bottom-0 w-64 bg-slate-900 border-r border-slate-800 p-4 z-50">
+            <div class="flex flex-col items-center mb-6">
+                <span class="text-4xl mb-2">🥬</span>
+                <span class="text-xl font-extrabold text-sky-400 font-bold tracking-tight">Compras gastro</span>
+                <span class="text-xs text-slate-400 text-center" data-l10n="app_subtitle_short">Gestão de encomendas</span>
+            </div>
+
+            <!-- Global Stats Card -->
+            <div class="bg-slate-800/60 rounded-xl p-3 mb-6 border border-slate-700/50">
+                <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+                    <span data-l10n="qty">Quantidade</span>
+                    <span id="sidebar-order-count" class="font-bold text-sky-400 monospaced">0</span>
+                </div>
+                <div class="flex items-center justify-between text-xs text-slate-400">
+                    <span>🚨 <span data-l10n="urgent">Urgente</span></span>
+                    <span id="sidebar-urgent-count" class="font-bold text-rose-500 monospaced">0</span>
+                </div>
+            </div>
+
+            <nav class="flex-1 space-y-1">
+                <button onclick="switchTab(0)" class="nav-sidebar-btn w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all text-left">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    <span data-l10n="tab_encomendas">Encomenda</span>
+                </button>
+                <button onclick="switchTab(1)" class="nav-sidebar-btn w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all text-left">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                    <span data-l10n="tab_catalogo">Catálogo</span>
+                </button>
+                <button onclick="switchTab(2)" class="nav-sidebar-btn w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all text-left">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    <span data-l10n="tab_categorias">Categorias</span>
+                </button>
+                <button onclick="switchTab(3)" class="nav-sidebar-btn w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all text-left">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span data-l10n="tab_relatorio">Relatório</span>
+                </button>
+                <button onclick="switchTab(4)" class="nav-sidebar-btn w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all text-left">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg>
+                    <span data-l10n="tab_gdrive">G-Drive Sync</span>
+                </button>
+            </nav>
+
+            <!-- Language and version info at the bottom -->
+            <div class="pt-4 border-t border-slate-800 flex flex-col space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs text-slate-500">Language / Język</span>
+                    <select onchange="changeLanguage(this.value)" id="lang-select-desktop" class="bg-slate-800 text-xs border border-slate-700 rounded px-2 py-1 text-sky-400">
+                        <option value="pt">Português</option>
+                        <option value="pl">Polski</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+                <div class="text-[10px] text-slate-600 text-center monospace">Agtoid Gastro Web v1.0.0</div>
+            </div>
+        </aside>
+
+        <!-- TOP HEADER BAR -->
+        <header class="bg-indigo-950/40 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <span class="text-2xl md:hidden">🥬</span>
+                <div>
+                    <h1 class="text-md md:text-lg font-black tracking-tight text-white flex items-center" data-l10n="app_name">Compras gastro</h1>
+                    <p class="text-[10px] md:text-xs text-slate-400" data-l10n="app_subtitle">Gestão de encomendas por categoria</p>
+                </div>
+            </div>
+
+            <!-- Header indicators (online states and mobile language changer) -->
+            <div class="flex items-center space-x-2">
+                <!-- Sync status pills -->
+                <div id="cloud-status-badge" class="flex items-center space-x-1.5 px-2 py-1 rounded bg-slate-800 border border-slate-700 text-[10px] text-slate-400 uppercase tracking-widest leading-none font-bold">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-500 inline-block" id="cloud-status-dot"></span>
+                    <span id="cloud-status-text" data-l10n="offline">Offline</span>
+                </div>
+
+                <!-- Language Selector for Mobile -->
+                <div class="md:hidden">
+                    <select onchange="changeLanguage(this.value)" id="lang-select-mobile" class="bg-slate-800 text-xs border border-slate-700/80 rounded px-1.5 py-1 text-sky-400 font-bold">
+                        <option value="pt">PT</option>
+                        <option value="pl">PL</option>
+                        <option value="en">EN</option>
+                    </select>
+                </div>
+            </div>
+        </header>
+
+        <!-- LIVE NOTIFICATION / SYNC STATE BANNER -->
+        <div id="sync-banner" class="hidden bg-sky-950 border-b border-sky-800/60 px-4 py-1.5 flex items-center space-x-2">
+            <svg class="animate-spin h-3.5 w-3.5 text-sky-400" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span id="sync-banner-text" class="text-xs text-sky-200 uppercase tracking-wider font-semibold font-mono">Syncing...</span>
+        </div>
+
+        <!-- APP TABS VIEWS CONTENT -->
+        <main class="flex-1 p-4 max-w-5xl w-full mx-auto">
+
+            <!-- TAB 0: ENCOMENDA (ORDER SCREEN) -->
+            <section id="tab-view-0" class="tab-view space-y-4">
+                
+                <!-- Filters Bar -->
+                <div class="bg-slate-900/90 rounded-2xl p-3 border border-slate-800 space-y-3 shadow-lg">
+                    <!-- Search Input -->
+                    <div class="relative">
+                        <input type="text" id="search-input" oninput="filterProducts()" placeholder="Pesquisar produto..." class="w-full bg-slate-850 border border-slate-700/60 rounded-xl px-4 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition-all font-medium pl-10" data-l10n-placeholder="search_placeholder">
+                        <svg class="w-4 h-4 text-slate-500 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+
+                    <!-- Horizontal Emojis Category Scroller -->
+                    <div class="flex items-center space-x-2 overflow-x-auto pb-1.5 scroll-smooth" id="category-chips-container">
+                        <!-- Chips injected by JS -->
+                    </div>
+
+                    <!-- Filter Checkboxes -->
+                    <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-800/60">
+                        <div class="flex items-center space-x-3">
+                            <button onclick="toggleFilterUrgent()" id="filter-urgent-btn" class="flex items-center space-x-1 px-3 py-1.5 rounded-full border border-slate-700 text-xs font-semibold bg-slate-800/50 hover:bg-slate-850 text-slate-300 transition-all">
+                                <span>🚨</span> <span data-l10n="urgent">Urgente</span>
+                            </button>
+                            <button onclick="toggleFilterQuantityOnly()" id="filter-qty-btn" class="flex items-center space-x-1 px-3 py-1.5 rounded-full border border-slate-700 text-xs font-semibold bg-slate-800/50 hover:bg-slate-850 text-slate-300 transition-all">
+                                <span>📦</span> <span data-l10n="limiar_filter_label">Limiar/Quantidade</span>
+                            </button>
+                        </div>
+
+                        <!-- Reset active order button -->
+                        <button onclick="confirmClearActiveOrder()" class="flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-rose-950/40 text-rose-300 border border-rose-900/40 hover:bg-rose-900/50 transition-all">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            <span data-l10n="limpiar_label">Wyczyść</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Products Grid / Categories Group -->
+                <div id="encomenda-list" class="space-y-6">
+                    <!-- Loaded dynamically in JS -->
+                </div>
+            </section>
+
+            <!-- TAB 1: CATALOGO (MANAGE PRODUCTS) -->
+            <section id="tab-view-1" class="tab-view hidden space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-lg font-bold text-white uppercase tracking-wider" data-l10n="products_in_catalog">Produkty w Katalogu</h2>
+                        <p class="text-xs text-slate-400">Total: <span id="catalog-count-badge" class="font-extrabold text-sky-400">0</span></p>
+                    </div>
+
+                    <button onclick="openProductModal()" class="flex items-center space-x-1 bg-sky-600 hover:bg-sky-500 text-white font-bold text-sm px-4 py-2.5 rounded-xl shadow-lg transition-all">
+                        <span>➕</span><span data-l10n="add_product">Dodaj produkt</span>
+                    </button>
+                </div>
+
+                <!-- Add quick search for product items inside catalog screen -->
+                <div class="relative">
+                    <input type="text" id="catalog-search-input" oninput="renderCatalog()" placeholder="Filtruj w katalogu..." class="w-full bg-slate-900/80 border border-slate-700/60 rounded-xl px-4 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition-all font-medium pl-10" data-l10n-placeholder="filter_catalog">
+                    <svg class="w-4 h-4 text-slate-500 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+
+                <!-- Product Catalog Table Cards -->
+                <div id="catalog-list" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <!-- Rendered automatically -->
+                </div>
+
+                <!-- Reset Catalog Button -->
+                <div class="pt-6 border-t border-slate-800 flex justify-end">
+                    <button onclick="confirmResetCatalog()" class="flex items-center space-x-1.5 text-xs text-rose-300 font-bold bg-rose-950/20 border border-rose-900/60 hover:bg-rose-950/50 px-3.5 py-2 rounded-xl transition-all">
+                        <span>🔄</span> <span data-l10n="reset_catalog">Zresetuj katalog</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- TAB 2: CATEGORIAS (MANAGE CATEGORIES) -->
+            <section id="tab-view-2" class="tab-view hidden space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-lg font-bold text-white uppercase tracking-wider" data-l10n="manage_categories">Zarządzaj kategoriami</h2>
+                        <p class="text-xs text-slate-400">Gastro ordering sectors</p>
+                    </div>
+
+                    <button onclick="openCategoryModal()" class="flex items-center space-x-1 bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm px-4 py-2.5 rounded-xl shadow-lg transition-all">
+                        <span>➕</span><span data-l10n="add_category">Nowa kategoria</span>
+                    </button>
+                </div>
+
+                <!-- Category Items layout -->
+                <div id="category-list" class="space-y-3">
+                    <!-- Injected dynamically -->
+                </div>
+            </section>
+
+            <!-- TAB 3: RELATORIO (REPORTS) -->
+            <section id="tab-view-3" class="tab-view hidden space-y-4">
+                
+                <!-- Aggregate Stats Bar -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-gradient-to-br from-slate-900 to-slate-850 rounded-2xl p-4 border border-slate-800">
+                        <span class="text-[10px] text-slate-400 uppercase tracking-widest font-bold block mb-1">Total Ordered Products</span>
+                        <div class="text-2xl font-black text-sky-400 monospace" id="report-items-count">0</div>
+                    </div>
+                    <div class="bg-gradient-to-br from-slate-900 to-slate-850 rounded-2xl p-4 border border-slate-800">
+                        <span class="text-[10px] text-slate-400 uppercase tracking-widest font-bold block mb-1" data-l10n="urgent">Urgente</span>
+                        <div class="text-2xl font-black text-rose-500 monospace" id="report-urgent-count">0</div>
+                    </div>
+                </div>
+
+                <!-- Shared exporters grid -->
+                <div class="bg-slate-900 rounded-2xl p-4 border border-slate-800 space-y-3">
+                    <h3 class="text-sm font-bold text-slate-300" data-l10n="order_export">Exportar Encomenda</h3>
+                    
+                    <div class="grid grid-cols-3 gap-2">
+                        <!-- WhatsApp button -->
+                        <button onclick="shareWhatsApp()" class="flex flex-col items-center justify-center p-3 bg-green-600 hover:bg-green-500 rounded-xl space-y-1 transform active:scale-95 transition-all shadow-md">
+                            <span class="text-xl">💬</span>
+                            <span class="text-[10px] text-white font-black uppercase" data-l10n="send_to_whatsapp">WhatsApp</span>
+                        </button>
+                        <!-- Email button -->
+                        <button onclick="shareEmail()" class="flex flex-col items-center justify-center p-3 bg-blue-600 hover:bg-blue-500 rounded-xl space-y-1 transform active:scale-95 transition-all shadow-md">
+                            <span class="text-xl">✉️</span>
+                            <span class="text-[10px] text-white font-black uppercase">Email</span>
+                        </button>
+                        <!-- Copy button -->
+                        <button onclick="copyFormattedReport()" class="flex flex-col items-center justify-center p-3 bg-slate-800 hover:bg-slate-700/80 rounded-xl border border-slate-700 space-y-1 transform active:scale-95 transition-all shadow-md">
+                            <span class="text-xl">📋</span>
+                            <span class="text-[10px] text-white font-black uppercase" data-l10n="copy_text">Copiar</span>
+                        </button>
+                    </div>
+
+                    <!-- Clear active orders in report screen -->
+                    <button onclick="confirmClearActiveOrder()" class="w-full py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-extrabold rounded-xl shadow transition-all flex items-center justify-center space-x-1" data-l10n="clear_active_order">
+                        Limpar Encomenda Ativa
+                    </button>
+                </div>
+
+                <!-- Toggle Segment: Tabular vs Text -->
+                <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
+                    <div class="flex border-b border-slate-800 bg-slate-950">
+                        <button onclick="setReportSubTab('table')" id="report-tab-table" class="flex-1 py-3 text-xs font-extrabold uppercase tracking-wide border-b-2 border-sky-400 text-sky-400 bg-slate-900/30 transition-all" data-l10n="tabular_report">
+                            Relatório Tabelar
+                        </button>
+                        <button onclick="setReportSubTab('text')" id="report-tab-text" class="flex-1 py-3 text-xs font-extrabold uppercase tracking-wide border-b-2 border-transparent text-slate-400 transition-all" data-l10n="report_text">
+                            Texto do Relatório
+                        </button>
+                    </div>
+
+                    <!-- Output reports content -->
+                    <div class="p-4 bg-slate-900" id="report-content-box">
+                        <!-- Content Injected here (Table view or formatted text box) -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: GDRIVE SYNC (CLOUD SYNCHRONIZER SYSTEM) -->
+            <section id="tab-view-4" class="tab-view hidden space-y-4">
+                
+                <div class="bg-slate-900 rounded-2xl p-4 border border-slate-800 space-y-4 shadow-xl">
+                    <div class="flex items-center space-x-2 pb-2 border-b border-slate-800">
+                        <span class="text-xl">☁️</span>
+                        <div>
+                            <span class="block text-md font-bold text-white uppercase tracking-wider" data-l10n="sync_settings">Configuração de Sincronização</span>
+                            <span class="text-xs text-slate-400">Power connection through Google Apps Script Proxy</span>
+                        </div>
+                    </div>
+
+                    <!-- Proxy Settings configuration -->
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Google Apps Script Web App URL</label>
+                            <input type="text" id="gdrive-api-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-slate-850 text-slate-100 placeholder-slate-600 border border-slate-700/60 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-sky-500 monospace font-medium">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Klucz bezpieczeństwa (Security Token)</label>
+                            <input type="password" id="gdrive-security-token" placeholder="SECURITY_TOKEN wprowadzony w Code.gs..." class="w-full bg-slate-850 text-slate-100 placeholder-slate-600 border border-slate-700/60 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-sky-500 monospace font-medium">
+                        </div>
+
+                        <!-- Mode selection selection -->
+                        <div class="pt-2">
+                            <span class="block text-[10px] uppercase font-bold text-slate-400 mb-1.5" data-l10n="active_op_mode">Aktywny tryb operacyjny</span>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="setSyncMode('MASTER')" id="sync-mode-master" class="py-2.5 rounded-xl text-xs font-extrabold uppercase border-2 border-slate-700 text-slate-400 transition-all flex flex-col items-center">
+                                    <span>👑 ADMIN/MASTER</span>
+                                    <span class="text-[9px] lowercase font-normal text-slate-500 mt-0.5">Read/Write all files</span>
+                                </button>
+                                <button onclick="setSyncMode('USER')" id="sync-mode-user" class="py-2.5 rounded-xl text-xs font-extrabold uppercase border-2 border-slate-700 text-slate-400 transition-all flex flex-col items-center">
+                                    <span>👷 PRACOWNIK/USER</span>
+                                    <span class="text-[9px] lowercase font-normal text-slate-500 mt-0.5 font-sans">Read catalog, submit order only</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="pt-1.5 flex gap-2">
+                            <button onclick="saveSyncSettings()" class="flex-1 py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-extrabold rounded-xl shadow transition-all text-xs" data-l10n="save">
+                                Zapisz
+                            </button>
+                            <button onclick="copyPreConfigShareLink()" class="px-3.5 bg-slate-800 hover:bg-slate-700 text-sky-400 border border-slate-700 rounded-xl transition-all text-xs" title="Kopiuj link konfiguracyjny" id="copy-share-btn">
+                                🔗 <span data-l10n="copy_bridge_key">Klucz Bridge</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sync Manual operations actions panel -->
+                <div class="bg-slate-900 rounded-2xl p-4 border border-slate-800 space-y-3.5 shadow-xl">
+                    <span class="block text-xs font-bold text-slate-300">Synchronizacja ręczna (Force Sync)</span>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="forceCloudPull()" class="py-2.5 bg-indigo-900/60 hover:bg-indigo-900/80 text-indigo-300 border border-indigo-700/40 rounded-xl transition-all text-xs font-bold" data-l10n="pull_cloud">
+                            🔄 Pobierz z chmury (Pull)
+                        </button>
+                        <button onclick="forceCloudPush()" class="py-2.5 bg-emerald-950/60 hover:bg-emerald-950/80 text-emerald-300 border border-emerald-800/50 rounded-xl transition-all text-xs font-bold" data-l10n="push_cloud">
+                            🔀 Wyślij do chmury (Push)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Logs console Panel output terminal -->
+                <div class="bg-black rounded-2xl p-4 border border-slate-800 space-y-2.5 shadow-xl">
+                    <div class="flex items-center justify-between text-[10px] text-slate-400 uppercase tracking-widest font-black font-sans">
+                        <span data-l10n="diagnostic_console">Konsola diagnostyczna:</span>
+                        <button onclick="clearTerminalLogs()" class="text-rose-400 hover:text-rose-300 normal-case" data-l10n="limpiar_label">Clear</button>
+                    </div>
+
+                    <div id="logs-terminal" class="bg-slate-950 p-3 rounded-lg border border-slate-900/60 h-44 overflow-y-auto monospace text-[10.5px] text-emerald-400 space-y-1">
+                        <!-- Injected diagnostic rows -->
+                        <div class="text-slate-500">// Terminal log successfully loaded</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- MOBILE BOTTOM BAR NAVIGATION -->
+        <footer class="md:hidden fixed bottom-0 left-0 right-0 bg-slate-950 border-t border-slate-900/80 p-2 flex items-center justify-around z-50">
+            <button onclick="switchTab(0)" class="nav-tab-btn flex flex-col items-center flex-1 py-1 relative">
+                <span class="text-xl">🛒</span>
+                <span class="text-[9px] text-slate-400 mt-1 font-bold" data-l10n="tab_encomendas">Encomenda</span>
+                <span id="nav-indicator-0" class="active-indicator hidden"></span>
+            </button>
+            <button onclick="switchTab(1)" class="nav-tab-btn flex flex-col items-center flex-1 py-1 relative">
+                <span class="text-xl">📋</span>
+                <span class="text-[9px] text-slate-400 mt-1 font-bold" data-l10n="tab_catalogo">Catálogo</span>
+                <span id="nav-indicator-1" class="active-indicator hidden"></span>
+            </button>
+            <button onclick="switchTab(2)" class="nav-tab-btn flex flex-col items-center flex-1 py-1 relative">
+                <span class="text-xl">⚙️</span>
+                <span class="text-[9px] text-slate-400 mt-1 font-bold" data-l10n="tab_categorias">Categorias</span>
+                <span id="nav-indicator-2" class="active-indicator hidden"></span>
+            </button>
+            <button onclick="switchTab(3)" class="nav-tab-btn flex flex-col items-center flex-1 py-1 relative">
+                <span class="text-xl">📄</span>
+                <span class="text-[9px] text-slate-400 mt-1 font-bold" data-l10n="tab_relatorio">Relatório</span>
+                <span id="nav-indicator-3" class="active-indicator hidden"></span>
+            </button>
+            <button onclick="switchTab(4)" class="nav-tab-btn flex flex-col items-center flex-1 py-1 relative">
+                <span class="text-xl">☁️</span>
+                <span class="text-[9px] text-slate-400 mt-1 font-bold" data-l10n="tab_gdrive">Sync</span>
+                <span id="nav-indicator-4" class="active-indicator hidden"></span>
+            </button>
+        </footer>
+
+    </div>
+
+    <!-- MODAL: ADD / EDIT PRODUCT -->
+    <div id="product-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 rounded-2xl border border-slate-800 w-full max-w-md overflow-hidden transform scale-95 transition-all shadow-2xl p-5 space-y-4">
+            <h3 id="product-modal-title" class="text-md font-extrabold uppercase tracking-wide text-white">Adicionar Produto</h3>
+            
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-[10px] text-slate-400 font-extrabold uppercase mb-1" data-l10n="product_name">Nome do Produto</label>
+                    <input type="text" id="modal-product-name" class="w-full bg-slate-850 border border-slate-700/60 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-sky-500">
+                </div>
+                <div>
+                    <label class="block text-[10px] text-slate-400 font-extrabold uppercase mb-1" data-l10n="category_label">Categoria</label>
+                    <select id="modal-product-category" class="w-full bg-slate-850 border border-slate-700/60 rounded-xl px-3.5 py-2 text-sm text-sky-400 focus:outline-none focus:border-sky-500 font-bold">
+                        <!-- Load category options -->
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] text-slate-400 font-extrabold uppercase mb-1" data-l10n="unit_of_measure">Unidade de Medida</label>
+                    <select id="modal-product-unit" class="w-full bg-slate-850 border border-slate-700/60 rounded-xl px-3.5 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500">
+                        <option value="kg">kg</option>
+                        <option value="unid">unid</option>
+                        <option value="litro">litro</option>
+                        <option value="pacote">pacote</option>
+                        <option value="caixa">caixa</option>
+                        <option value="g">g</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2 pt-2 justify-end">
+                <button onclick="closeProductModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-extrabold text-xs rounded-xl border border-slate-700 transition-all" data-l10n="cancel">Cancelar</button>
+                <button onclick="saveProductModal()" class="px-5 py-2 bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-xs rounded-xl shadow transition-all" data-l10n="confirm">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD / EDIT CATEGORY -->
+    <div id="category-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 rounded-2xl border border-slate-800 w-full max-w-md overflow-hidden transform scale-95 transition-all shadow-2xl p-5 space-y-4">
+            <h3 id="category-modal-title" class="text-md font-extrabold uppercase tracking-wide text-white">Nova Categoria</h3>
+            
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-[10px] text-slate-400 font-extrabold uppercase mb-1" data-l10n="category_name">Nome da Categoria</label>
+                    <input type="text" id="modal-category-name" class="w-full bg-slate-850 border border-slate-700/60 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-sky-500">
+                </div>
+                <div>
+                    <label class="block text-[10px] text-slate-400 font-extrabold uppercase mb-1" data-l10n="icon">Ícone (Emoji)</label>
+                    <input type="text" id="modal-category-icon" placeholder="ex: 🥬" class="w-full bg-slate-850 border border-slate-700/60 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-sky-500">
+                </div>
+                <div>
+                    <label class="block text-[10px] text-slate-400 font-extrabold uppercase mb-1" data-l10n="color">Kolor (Hex)</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="color" id="modal-category-color-picker" oninput="document.getElementById('modal-category-color').value = this.value" class="w-10 h-10 bg-transparent border-0 rounded cursor-pointer">
+                        <input type="text" id="modal-category-color" placeholder="#4ade80" oninput="document.getElementById('modal-category-color-picker').value = this.value" class="flex-1 bg-slate-850 border border-slate-700/60 rounded-xl px-3.5 py-2 text-sm text-sky-400 focus:outline-none focus:border-sky-500 monospace font-bold">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2 pt-2 justify-end">
+                <button onclick="closeCategoryModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-extrabold text-xs rounded-xl border border-slate-700 transition-all" data-l10n="cancel">Cancelar</button>
+                <button onclick="saveCategoryModal()" class="px-5 py-2 bg-teal-600 hover:bg-teal-500 text-white font-extrabold text-xs rounded-xl shadow transition-all" data-l10n="confirm">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CUSTOM TOASTS SYSTEM -->
+    <div id="toast-container" class="fixed top-5 left-1/2 -translate-x-1/2 flex flex-col space-y-2 z-50 pointer-events-none max-w-sm w-full font-bold px-4">
+        <!-- Toast elements dynamically injected -->
+    </div>
+
+    <!-- JAVASCRIPT APP STATE LOGIC -->
+    <script>
+        // ====================================================================
+        // DATABASE SEEDS (DEFAULT GASTRO SEEDS)
+        // ====================================================================
+        const DEFAULT_CATEGORIES = [
+            { id: 1, nome: "Vegetais", cor: "#4ade80", icone: "🥬", position: 0 },
+            { id: 2, nome: "Frutas", cor: "#fbbf24", icone: "🍊", position: 1 },
+            { id: 3, nome: "Carne", cor: "#ef4444", icone: "🥩", position: 2 },
+            { id: 4, nome: "Peixe", cor: "#3b82f6", icone: "🐟", position: 3 },
+            { id: 5, nome: "Laticínios", cor: "#a78bfa", icone: "🥛", position: 4 },
+            { id: 6, nome: "Bebidas", cor: "#0ea5e9", icone: "🥤", position: 5 },
+            { id: 7, nome: "Padaria", cor: "#f97316", icone: "🍞", position: 6 },
+            { id: 8, nome: "Congelados", cor: "#64748b", icone: "❄️", position: 7 }
+        ];
+
+        const DEFAULT_PRODUCTS = [
+            { id: 1, nome: "Tomate Chucha", categoria: "Vegetais", unidade: "kg" },
+            { id: 2, nome: "Cebola Amarela", categoria: "Vegetais", unidade: "kg" },
+            { id: 3, nome: "Batata Nova", categoria: "Vegetais", unidade: "kg" },
+            { id: 4, nome: "Alface Iceberg", categoria: "Vegetais", unidade: "unid" },
+            { id: 5, nome: "Limões", categoria: "Frutas", unidade: "kg" },
+            { id: 6, nome: "Laranjas", categoria: "Frutas", unidade: "kg" },
+            { id: 7, nome: "Peito de Frango", categoria: "Carne", unidade: "kg" },
+            { id: 8, nome: "Carne Picada", categoria: "Carne", unidade: "kg" },
+            { id: 9, nome: "Salmão Fresco", categoria: "Peixe", unidade: "kg" },
+            { id: 10, nome: "Bacalhau", categoria: "Peixe", unidade: "kg" },
+            { id: 11, nome: "Leite", categoria: "Laticínios", unidade: "litro" },
+            { id: 12, nome: "Manteiga", categoria: "Laticínios", unidade: "unid" },
+            { id: 13, nome: "Água 1.5L", categoria: "Bebidas", unidade: "unid" },
+            { id: 14, nome: "Coca-Cola 1L", categoria: "Bebidas", unidade: "unid" },
+            { id: 15, nome: "Pão de Forma", categoria: "Padaria", unidade: "unid" },
+            { id: 16, nome: "Croissant", categoria: "Padaria", unidade: "unid" },
+            { id: 17, nome: "Ervilhas Congeladas", categoria: "Congelados", unidade: "pacote" },
+            { id: 18, nome: "Batatas Fritas Congeladas", categoria: "Congelados", unidade: "pacote" }
+        ];
+
+        // ====================================================================
+        // L10N TRANSLATIONS DICTIONARY
+        // ====================================================================
+        const TRANSLATIONS = {
+            "app_name": { pt: "Compras gastro", pl: "Compras gastro", en: "Compras gastro" },
+            "app_subtitle": { pt: "Gestão de encomendas por categoria", pl: "Zarządzanie zamówieniami wg kategorii", en: "Order management by category" },
+            "app_subtitle_short": { pt: "Gestão de encomendas", pl: "Zarządzanie zamówieniami", en: "Order management" },
+            "online": { pt: "Online", pl: "Połączono", en: "Online" },
+            "offline": { pt: "Offline", pl: "Lokalnie", en: "Offline" },
+            "qty": { pt: "Quantidade", pl: "Ilość", en: "Quantity" },
+            "urgent": { pt: "Urgente", pl: "Pilne", en: "Urgent" },
+            "cancel": { pt: "Cancelar", pl: "Anuluj", en: "Cancel" },
+            "confirm": { pt: "Confirmar", pl: "Potwierdź", en: "Confirm" },
+            "save": { pt: "Salvar", pl: "Zapisz", en: "Save" },
+            "delete": { pt: "Excluir", pl: "Usuń", en: "Delete" },
+            "search_placeholder": { pt: "Pesquisar produto...", pl: "Szukaj produktu...", en: "Search product..." },
+            "limiar_filter_label": { pt: "Com Quantidade", pl: "Tylko wybrane", en: "With quantity" },
+            "limpiar_label": { pt: "Wyczyść", pl: "Wyczyść", en: "Clear" },
+            "tab_encomendas": { pt: "Encomenda", pl: "Zamówienia", en: "Orders" },
+            "tab_catalogo": { pt: "Catálogo", pl: "Katalog", en: "Catalog" },
+            "tab_categorias": { pt: "Categorias", pl: "Kategorie", en: "Categories" },
+            "tab_relatorio": { pt: "Relatório", pl: "Raport", en: "Report" },
+            "tab_gdrive": { pt: "G-Drive Sync", pl: "Chmura G-Drive", en: "G-Drive Sync" },
+            "products_in_catalog": { pt: "Produtos no Catálogo", pl: "Produkty w Katalogu", en: "Products in Catalog" },
+            "add_product": { pt: "Adicionar Produto", pl: "Dodaj produkt", en: "Add Product" },
+            "edit_product": { pt: "Editar Produto", pl: "Edytuj produkt", en: "Edit Product" },
+            "filter_catalog": { pt: "Filtrar no Catálogo...", pl: "Filtruj w katalogu...", en: "Filter catalog..." },
+            "reset_catalog": { pt: "Reset Catálogo", pl: "Zresetuj katalog", en: "Reset Catalog" },
+            "product_name": { pt: "Nome do Produto", pl: "Nazwa produktu", en: "Product Name" },
+            "unit_of_measure": { pt: "Unidade de Medida", pl: "Jednostka miary", en: "Unit of Measure" },
+            "delete_product": { pt: "Excluir Produto?", pl: "Usunąć produkt?", en: "Delete Product" },
+            "delete_product_confirm": { pt: "Gostaria de realmente apagar este produto?", pl: "Czy na pewno chcesz usunąć ten produkt?", en: "Are you sure you want to delete this product?" },
+            "add_category": { pt: "Nova Categoria", pl: "Nowa kategoria", en: "New Category" },
+            "edit_category": { pt: "Editar Categoria", pl: "Edytuj kategorię", en: "Edit Category" },
+            "manage_categories": { pt: "Gerenciar Categorias", pl: "Zarządzaj kategoriami", en: "Manage Categories" },
+            "category_name": { pt: "Nome da Categoria", pl: "Nazwa kategorii", en: "Category Name" },
+            "color": { pt: "Cor (Hex)", pl: "Kolor (Hex)", en: "Color (Hex)" },
+            "icon": { pt: "Ícone (Emoji)", pl: "Ikona (Emoji)", en: "Icon (Emoji)" },
+            "delete_category": { pt: "Excluir Categoria", pl: "Usuń kategorię", en: "Delete Category" },
+            "order_summary": { pt: "Resumo de Encomendas", pl: "Podsumowanie zamówień", en: "Order Summary" },
+            "report_header_text": { pt: "📋 RELATÓRIO DE ENCOMENDA", pl: "📋 RAPORT ZAMÓWIENIA", en: "📋 ORDER REPORT" },
+            "category_label": { pt: "CATEGORIA", pl: "KATEGORIA", en: "CATEGORY" },
+            "order_export": { pt: "Exportar Encomenda", pl: "Eksportuj zamówienie", en: "Export Order" },
+            "clear_active_order": { pt: "Limpar Encomenda Ativa", pl: "Wyczyść aktywne zamówienie", en: "Clear Active Order" },
+            "tabular_report": { pt: "Relatório Tabelar", pl: "Raport tabelaryczny", en: "Tabular Report" },
+            "no_active_items": { pt: "Sem itens ativos na encomenda.", pl: "Brak aktywnych pozycji w zamówieniu.", en: "No active items in the order." },
+            "report_text": { pt: "Texto do Relatório", pl: "Tekst raportu", en: "Report Text" },
+            "copy_text": { pt: "Copiar Texto", pl: "Kopiuj tekst", en: "Copy Text" },
+            "send_to_whatsapp": { pt: "Enviar p/ WhatsApp", pl: "Wyślij na WhatsApp", en: "Send via WhatsApp" },
+            "no_orders": { pt: "Nenhuma encomenda ativa registrada no momento.", pl: "Brak aktywnych zamówień w tej chwili.", en: "No active orders registered at the moment." },
+            "copied_success": { pt: "Copiado para a área de transferência!", pl: "Skopiowano do schowka!", en: "Copied to clipboard!" },
+            "sync_settings": { pt: "Configuração de Sincronização", pl: "Konfiguracja synchronizacji", en: "Sync Settings" },
+            "copy_bridge_key": { pt: "Skopiuj url i token", pl: "Kopiuj bridge key", en: "Copy config key" },
+            "pull_cloud": { pt: "Puxar Nuvem", pl: "Pobierz z chmury", en: "Pull Cloud" },
+            "push_cloud": { pt: "Enviar Nuvem", pl: "Wyślij do chmury", en: "Push Cloud" },
+            "active_op_mode": { pt: "Modo de Operação Ativo", pl: "Aktywny tryb operacyjny", en: "Active Operating Mode" },
+            "diagnostic_console": { pt: "Console de Diagnóstico:", pl: "Konsola diagnostyczna:", en: "Diagnostic Console:" },
+            "no_products": { pt: "Nenhum produto cadastrado no catálogo.", pl: "Brak zarejestrowanych produktów w katalogu.", en: "No products in catalog." },
+            "no_products_match": { pt: "Nenhum produto para os filtros selecionados.", pl: "Brak produktów dla wybranych filtrów.", en: "No products match filters." }
+        };
+
+        // ====================================================================
+        // STATE STORAGE MANAGERS
+        // ====================================================================
+        let state = {
+            currentLanguage: "pt",
+            activeTab: 0,
+            reportSubTab: "table", // table | text
+            
+            // Database models
+            categories: [],
+            products: [],
+            orders: {}, // productId -> { quantidade: 1.5, prioridade: "Normal"/"Urgente" }
+
+            // Filter sets
+            activeCategory: "all",
+            searchQuery: "",
+            showOnlyUrgent: false,
+            showOnlyWithQty: false,
+
+            // Web App cloud settings
+            gasApiUrl: "",
+            gasSecurityToken: "",
+            appMode: "MASTER", // MASTER | USER
+
+            // Modal contexts
+            productModalMode: "add", // add | edit
+            editingProductId: null,
+            categoryModalMode: "add", // add | edit
+            editingCategoryId: null
+        };
+
+        // ====================================================================
+        // STARTUP INITIALIZATION
+        // ====================================================================
+        window.addEventListener('DOMContentLoaded', () => {
+            loadStateFromLocalStorage();
+            parseQueryParamsConfig();
+            
+            // Setup static event binds
+            applyTranslations();
+            renderCategoryChips();
+            filterProducts();
+            renderCatalog();
+            renderCategoriesManager();
+            renderReports();
+            renderTerminalLogs();
+            updateTabNavigationStates();
+
+            // Auto pull from chmura on first load if configured
+            if (state.gasApiUrl && state.gasSecurityToken) {
+                terminalLog(`[STARTUP] Configured Apps Script endpoint detected. Commencing auto-pull...`);
+                cloudPullSync(true); // silent auto sync
+            }
+        });
+
+        function loadStateFromLocalStorage() {
+            // Local language
+            state.currentLanguage = localStorage.getItem("gastro_lang") || "pt";
+            document.getElementById("lang-select-desktop").value = state.currentLanguage;
+            document.getElementById("lang-select-mobile").value = state.currentLanguage;
+
+            // Categories
+            const storedCats = localStorage.getItem("gastro_categories");
+            if (storedCats) {
+                state.categories = JSON.parse(storedCats);
+            } else {
+                state.categories = [...DEFAULT_CATEGORIES];
+                saveCategoriesToLocalStorage();
+            }
+
+            // Products
+            const storedProds = localStorage.getItem("gastro_products");
+            if (storedProds) {
+                state.products = JSON.parse(storedProds);
+            } else {
+                state.products = [...DEFAULT_PRODUCTS];
+                saveProductsToLocalStorage();
+            }
+
+            // Orders
+            const storedOrders = localStorage.getItem("gastro_orders");
+            if (storedOrders) {
+                state.orders = JSON.parse(storedOrders);
+            } else {
+                state.orders = {};
+            }
+
+            // Cloud preferences
+            state.gasApiUrl = localStorage.getItem("gastro_gas_url") || "";
+            state.gasSecurityToken = localStorage.getItem("gastro_gas_token") || "";
+            state.appMode = localStorage.getItem("gastro_app_mode") || "MASTER";
+
+            document.getElementById("gdrive-api-url").value = state.gasApiUrl;
+            document.getElementById("gdrive-security-token").value = state.gasSecurityToken;
+            updateSyncModeUI();
+        }
+
+        /**
+         * Parses query parameters to quickly pre-configure and link employee devices.
+         * Example: ?url=https://script...&token=A_Token_Value&mode=USER
+         */
+        function parseQueryParamsConfig() {
+            const params = new URLSearchParams(window.location.search);
+            let updated = false;
+
+            if (params.has('url')) {
+                state.gasApiUrl = decodeURIComponent(params.get('url'));
+                localStorage.setItem("gastro_gas_url", state.gasApiUrl);
+                document.getElementById("gdrive-api-url").value = state.gasApiUrl;
+                updated = true;
+            }
+            if (params.has('token')) {
+                state.gasSecurityToken = decodeURIComponent(params.get('token'));
+                localStorage.setItem("gastro_gas_token", state.gasSecurityToken);
+                document.getElementById("gdrive-security-token").value = state.gasSecurityToken;
+                updated = true;
+            }
+            if (params.has('mode')) {
+                state.appMode = params.get('mode').toUpperCase();
+                localStorage.setItem("gastro_app_mode", state.appMode);
+                updateSyncModeUI();
+                updated = true;
+            }
+
+            if (updated) {
+                showToast("🎯 Pre-configured from link successfully!", "success");
+                terminalLog(`[CONFIG] System auto-configured from URL Parameters! Connection variables rewritten.`);
+                // Clean the address bar cleanly
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
+
+        // Save methods
+        function saveCategoriesToLocalStorage() {
+            localStorage.setItem("gastro_categories", JSON.stringify(state.categories));
+        }
+        function saveProductsToLocalStorage() {
+            localStorage.setItem("gastro_products", JSON.stringify(state.products));
+        }
+        function saveOrdersToLocalStorage() {
+            localStorage.setItem("gastro_orders", JSON.stringify(state.orders));
+        }
+
+        // ====================================================================
+        // L10N TRANSLATOR ENGINE
+        // ====================================================================
+        function translate(key, countVal = null) {
+            const row = TRANSLATIONS[key];
+            if (!row) return key;
+            let phrase = row[state.currentLanguage] || row["en"] || key;
+            if (countVal !== null) {
+                phrase = phrase.replace("{count}", countVal);
+            }
+            return phrase;
+        }
+
+        function changeLanguage(lang) {
+            state.currentLanguage = lang;
+            localStorage.setItem("gastro_lang", lang);
+            document.getElementById("lang-select-desktop").value = lang;
+            document.getElementById("lang-select-mobile").value = lang;
+
+            applyTranslations();
+            renderCategoryChips();
+            filterProducts();
+            renderCatalog();
+            renderCategoriesManager();
+            renderReports();
+            showToast("Idioma alterado / Język zmieniony", "info");
+        }
+
+        function applyTranslations() {
+            // Apply text translations to any DOM nodes annotated with data-l10n
+            document.querySelectorAll('[data-l10n]').forEach(element => {
+                const key = element.getAttribute('data-l10n');
+                element.innerText = translate(key);
+            });
+            // Apply values to placeholders
+            document.querySelectorAll('[data-l10n-placeholder]').forEach(element => {
+                const key = element.getAttribute('data-l10n-placeholder');
+                element.placeholder = translate(key);
+            });
+        }
+
+        // ====================================================================
+        // TAB CONTROLLER
+        // ====================================================================
+        function switchTab(tabIndex) {
+            state.activeTab = tabIndex;
+            
+            // Toggle view visibility
+            document.querySelectorAll('.tab-view').forEach((el, index) => {
+                if (index === tabIndex) {
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+
+            updateTabNavigationStates();
+
+            // Perform context refreshes
+            if (tabIndex === 0) {
+                renderCategoryChips();
+                filterProducts();
+            } else if (tabIndex === 1) {
+                renderCatalog();
+            } else if (tabIndex === 2) {
+                renderCategoriesManager();
+            } else if (tabIndex === 3) {
+                renderReports();
+            }
+        }
+
+        function updateTabNavigationStates() {
+            // Mobile Tabs UI Indicators
+            for (let i = 0; i < 5; i++) {
+                const indicator = document.getElementById(`nav-indicator-${i}`);
+                if (indicator) {
+                    if (state.activeTab === i) {
+                        indicator.classList.remove('hidden');
+                    } else {
+                        indicator.classList.add('hidden');
+                    }
+                }
+            }
+
+            // Desktop Sidebar Navigation states
+            document.querySelectorAll('.nav-sidebar-btn').forEach((btn, index) => {
+                if (index === state.activeTab) {
+                    btn.classList.add('bg-sky-950/60', 'text-sky-400', 'border-l-4', 'border-sky-500', 'pl-3');
+                    btn.classList.remove('text-slate-400', 'hover:bg-slate-800/40');
+                } else {
+                    btn.classList.remove('bg-sky-950/60', 'text-sky-400', 'border-l-4', 'border-sky-500', 'pl-3');
+                    btn.classList.add('text-slate-400', 'hover:bg-slate-800/40');
+                }
+            });
+        }
+
+        // ====================================================================
+        // TAB 0: ENCOMENDAS (ORDER OPERATIONS)
+        // ====================================================================
+        function renderCategoryChips() {
+            const container = document.getElementById("category-chips-container");
+            if (!container) return;
+
+            // Sort categories by their position sequence
+            const sortedCats = [...state.categories].sort((a,b) => (a.position - b.position));
+
+            let html = `
+                <button onclick="selectFilterCategory('all')" 
+                        class="flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all ${state.activeCategory === 'all' ? 'bg-sky-500 text-slate-900 shadow-md' : 'bg-slate-800 text-slate-300 border border-slate-700/60 hover:bg-slate-750'}">
+                    📂 PT/WSZ
+                </button>
+            `;
+
+            sortedCats.forEach(cat => {
+                const isSelected = state.activeCategory === cat.nome;
+                const activeColor = cat.cor || '#0ea5e9';
+                const styleStr = isSelected 
+                    ? `background-color: ${activeColor}; color: #000; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2)`
+                    : `border: 1px solid ${activeColor}40; background-color: ${activeColor}10`;
+
+                html += `
+                    <button onclick="selectFilterCategory('${cat.nome}')" 
+                            style="${styleStr}"
+                            class="flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all transition-transform active:scale-95 ${isSelected ? 'text-slate-900 font-extrabold' : 'text-slate-300 hover:bg-slate-800/80'}">
+                        <span>${cat.icone || '📁'}</span> ${cat.nome}
+                    </button>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function selectFilterCategory(catName) {
+            state.activeCategory = catName;
+            renderCategoryChips();
+            filterProducts();
+        }
+
+        function toggleFilterUrgent() {
+            state.showOnlyUrgent = !state.showOnlyUrgent;
+            const btn = document.getElementById('filter-urgent-btn');
+            if (state.showOnlyUrgent) {
+                btn.classList.add('bg-rose-950/40', 'border-rose-700', 'text-rose-300');
+                btn.classList.remove('bg-slate-800/50', 'border-slate-700', 'text-slate-300');
+            } else {
+                btn.classList.remove('bg-rose-950/40', 'border-rose-700', 'text-rose-300');
+                btn.classList.add('bg-slate-800/50', 'border-slate-700', 'text-slate-300');
+            }
+            filterProducts();
+        }
+
+        function toggleFilterQuantityOnly() {
+            state.showOnlyWithQty = !state.showOnlyWithQty;
+            const btn = document.getElementById('filter-qty-btn');
+            if (state.showOnlyWithQty) {
+                btn.classList.add('bg-sky-950/40', 'border-sky-700', 'text-sky-300');
+                btn.classList.remove('bg-slate-800/50', 'border-slate-700', 'text-slate-300');
+            } else {
+                btn.classList.remove('bg-sky-950/40', 'border-sky-700', 'text-sky-300');
+                btn.classList.add('bg-slate-800/50', 'border-slate-700', 'text-slate-300');
+            }
+            filterProducts();
+        }
+
+        function filterProducts() {
+            const container = document.getElementById("encomenda-list");
+            if (!container) return;
+
+            const query = (document.getElementById("search-input").value || "").trim().toLowerCase();
+            
+            // 1. Gather products matching search filters
+            const filteredProds = state.products.filter(prod => {
+                const order = state.orders[prod.id];
+                const hasQty = order && order.quantidade > 0;
+                const isUrgent = order && order.prioridade === "Urgente";
+
+                // Filter assertions
+                const matchesUrgent = !state.showOnlyUrgent || isUrgent;
+                const matchesQty = !state.showOnlyWithQty || hasQty;
+                const matchesCategory = state.activeCategory === 'all' || prod.categoria === state.activeCategory;
+                const matchesSearch = !query || prod.nome.toLowerCase().includes(query);
+
+                return matchesUrgent && matchesQty && matchesCategory && matchesSearch;
+            });
+
+            if (filteredProds.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-10 bg-slate-900/40 rounded-2xl border border-slate-800">
+                        <span class="text-4xl">💭</span>
+                        <p class="text-slate-400 text-sm mt-2" data-l10n="${state.products.length === 0 ? 'no_products' : 'no_products_match'}">
+                            ${state.products.length === 0 ? 'Nenhum produto cadastrado.' : 'Brak produktów odpowiadających filtrom.'}
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 2. Group them by category
+            const grouped = {};
+            filteredProds.forEach(prod => {
+                if (!grouped[prod.categoria]) {
+                    grouped[prod.categoria] = [];
+                }
+                grouped[prod.categoria].push(prod);
+            });
+
+            // 3. Sort groups based in the category configuration array 'position'
+            const sortedGroupEntries = Object.entries(grouped).sort((a,b) => {
+                const catA = state.categories.find(c => c.nome === a[0]);
+                const catB = state.categories.find(c => c.nome === b[0]);
+                const posA = catA ? catA.position : 9999;
+                const posB = catB ? catB.position : 9999;
+                return posA - posB;
+            });
+
+            let html = "";
+            sortedGroupEntries.forEach(([catName, productsList]) => {
+                const catObj = state.categories.find(c => c.nome === catName) || { icone: '📁', cor: '#3b82f6' };
+                const hexColor = catObj.cor || '#3b82f6';
+                
+                // Sort products by name inside this category
+                productsList.sort((a,b) => a.nome.localeCompare(b.nome));
+
+                html += `
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-lg overflow-hidden">
+                        <!-- Category Group Title -->
+                        <div style="background-color: ${hexColor}15; border-bottom: 1px solid ${hexColor}25" class="px-4 py-3 flex items-center space-x-2">
+                            <span class="text-lg">${catObj.icone || '📁'}</span>
+                            <span class="text-xs uppercase font-extrabold text-white tracking-widest">${catName}</span>
+                        </div>
+                        <div class="divide-y divide-slate-800/60 font-medium">
+                `;
+
+                productsList.forEach(prod => {
+                    const orderItem = state.orders[prod.id] || { quantidade: 0, prioridade: "Normal" };
+                    const isUrgent = orderItem.prioridade === "Urgente";
+                    
+                    html += `
+                        <div class="px-4 py-3.5 flex items-center justify-between gap-4 bg-slate-900 hover:bg-slate-850/40 transition-all">
+                            <div>
+                                <h4 class="text-sm font-semibold text-slate-100 flex items-center gap-1.5">
+                                    ${prod.nome}
+                                    ${isUrgent ? '<span class="text-xs py-0.5 px-1.5 rounded-full bg-rose-950 text-rose-400 border border-rose-900 text-[10px] uppercase font-bold tracking-widest leading-none font-sans">🚨 PILNE</span>' : ''}
+                                </h4>
+                                <span class="text-[10.5px] text-slate-500 font-bold tracking-wider">${prod.unidade}</span>
+                            </div>
+
+                            <!-- Right Side Order Controls -->
+                            <div class="flex items-center space-x-3.5 flex-shrink-0">
+                                <!-- Bell Priority Urgent Switch -->
+                                <button onclick="toggleProductUrgency(${prod.id})" 
+                                        class="p-2.5 rounded-xl border transition-all ${isUrgent ? 'bg-rose-950 border-rose-800 text-rose-400 scale-105 shadow-md shadow-rose-900/10' : 'bg-slate-850 border-slate-700/60 text-slate-500 hover:text-slate-400'}">
+                                    <svg class="w-4.5 h-4.5" fill="${isUrgent ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.582A6.002 6.002 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                                </button>
+
+                                <!-- Numeric Tactile Stepper Adjuster -->
+                                <div class="flex items-center bg-slate-950 rounded-xl border border-slate-800 p-0.5 overflow-hidden shadow-inner">
+                                    <button onclick="changeQty(${prod.id}, -1.0)" class="w-9 h-9 flex items-center justify-center text-slate-400 bg-slate-900/60 hover:bg-slate-850 active:scale-90 rounded-lg transition-all font-black text-sm select-none">-</button>
+                                    
+                                    <input type="number" step="any" min="0" 
+                                           onchange="setQtyDirect(${prod.id}, this.value)" 
+                                           value="${orderItem.quantidade || ''}" 
+                                           placeholder="0" 
+                                           class="w-12 text-center bg-transparent border-0 text-sky-400 font-black monospace text-xs focus:outline-none placeholder-slate-800 focus:ring-0">
+                                    
+                                    <button onclick="changeQty(${prod.id}, 1.0)" class="w-9 h-9 flex items-center justify-center text-slate-400 bg-slate-900/60 hover:bg-slate-850 active:scale-90 rounded-lg transition-all font-black text-sm select-none">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            updateGlobalStats();
+        }
+
+        function changeQty(productId, delta) {
+            const product = state.products.find(p => p.id === productId);
+            if (!product) return;
+
+            const current = state.orders[productId] || { quantidade: 0, prioridade: "Normal" };
+            const newQty = Math.max(0.0, current.quantidade + delta);
+
+            if (newQty <= 0) {
+                delete state.orders[productId];
+            } else {
+                state.orders[productId] = {
+                    quantidade: parseFloat(newQty.toFixed(2)),
+                    prioridade: current.prioridade
+                };
+            }
+            saveOrdersToLocalStorage();
+            filterProducts();
+            triggerAutoSyncCloud("pedido");
+        }
+
+        function setQtyDirect(productId, valStr) {
+            const qty = parseFloat(valStr) || 0.0;
+            const current = state.orders[productId] || { quantidade: 0, prioridade: "Normal" };
+
+            if (qty <= 0) {
+                delete state.orders[productId];
+            } else {
+                state.orders[productId] = {
+                    quantidade: parseFloat(qty.toFixed(2)),
+                    prioridade: current.prioridade
+                };
+            }
+
+            saveOrdersToLocalStorage();
+            filterProducts();
+            triggerAutoSyncCloud("pedido");
+        }
+
+        function toggleProductUrgency(productId) {
+            const current = state.orders[productId] || { quantidade: 0, prioridade: "Normal" };
+            const newPriority = current.prioridade === "Urgente" ? "Normal" : "Urgente";
+
+            // If quantity doesn't exist yet, we seed with 0.0 to hold priority state
+            state.orders[productId] = {
+                quantidade: current.quantidade,
+                prioridade: newPriority
+            };
+
+            saveOrdersToLocalStorage();
+            filterProducts();
+            triggerAutoSyncCloud("pedido");
+        }
+
+        function confirmClearActiveOrder() {
+            const userConfirm = confirm(translate("no_orders") + "\n\n" + translate("clear_active_order") + "?");
+            if (userConfirm) {
+                state.orders = {};
+                saveOrdersToLocalStorage();
+                filterProducts();
+                renderReports();
+                showToast(translate("limpiar_label") + "...", "success");
+                triggerAutoSyncCloud("pedido");
+            }
+        }
+
+        function updateGlobalStats() {
+            let totalQtyCount = 0;
+            let urgentCount = 0;
+
+            Object.entries(state.orders).forEach(([prodId, order]) => {
+                if (order.quantidade > 0) {
+                    totalQtyCount++;
+                    if (order.prioridade === "Urgente") {
+                        urgentCount++;
+                    }
+                }
+            });
+
+            // Update stats indicators
+            const sideQty = document.getElementById("sidebar-order-count");
+            const sideUrg = document.getElementById("sidebar-urgent-count");
+            if (sideQty) sideQty.innerText = totalQtyCount;
+            if (sideUrg) sideUrg.innerText = urgentCount;
+
+            const repQty = document.getElementById("report-items-count");
+            const repUrg = document.getElementById("report-urgent-count");
+            if (repQty) repQty.innerText = totalQtyCount;
+            if (repUrg) repUrg.innerText = urgentCount;
+        }
+
+        // ====================================================================
+        // TAB 1: CATALOG OPERATIONS (PRODUCTS MANAGEMENT)
+        // ====================================================================
+        function renderCatalog() {
+            const container = document.getElementById("catalog-list");
+            if (!container) return;
+
+            const query = (document.getElementById("catalog-search-input").value || "").trim().toLowerCase();
+
+            const finalCatalogList = state.products.filter(prod => {
+                return !query || prod.nome.toLowerCase().includes(query) || prod.categoria.toLowerCase().includes(query);
+            });
+
+            document.getElementById("catalog-count-badge").innerText = state.products.length;
+
+            if (finalCatalogList.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-1 md:col-span-2 text-center py-10 bg-slate-900/40 rounded-2xl border border-slate-800">
+                        <span class="text-3xl">📭</span>
+                        <p class="text-slate-400 text-xs mt-1" data-l10n="no_products">Catalog is empty</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort alphabetical
+            finalCatalogList.sort((a,b) => a.nome.localeCompare(b.nome));
+
+            let html = "";
+            finalCatalogList.forEach(prod => {
+                const catObj = state.categories.find(c => c.nome === prod.categoria) || { cor: '#64748b' };
+                const hexColor = catObj.cor || '#64748b';
+
+                html += `
+                    <div class="bg-gradient-to-br from-slate-900 to-slate-850 rounded-2xl p-4 border border-slate-800 flex items-center justify-between gap-4 hover:border-slate-700/60 transition-all shadow-md">
+                        <div>
+                            <span style="background-color: ${hexColor}25; color: ${hexColor}" 
+                                  class="inline-block text-[9px] uppercase font-black px-2 py-0.5 rounded-full border border-current mb-1.5 tracking-widest leading-none">
+                                ${prod.categoria}
+                            </span>
+                            <h4 class="text-sm font-semibold text-white tracking-wide leading-tight">${prod.nome}</h4>
+                            <span class="text-[10px] text-slate-500 font-bold tracking-wider">${prod.unidade}</span>
+                        </div>
+
+                        <!-- CRUD row actions -->
+                        <div class="flex items-center space-x-1 flex-shrink-0">
+                            <button onclick="openProductModal('edit', ${prod.id})" class="p-2 text-sky-400 hover:bg-sky-950/40 rounded-xl transition-all border border-transparent hover:border-sky-900/30" title="Edytuj">
+                                <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            </button>
+                            <button onclick="deleteProduct(${prod.id})" class="p-2 text-rose-400 hover:bg-rose-950/40 rounded-xl transition-all border border-transparent hover:border-rose-900/30" title="Usuń">
+                                <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function deleteProduct(productId) {
+            const product = state.products.find(p => p.id === productId);
+            if (!product) return;
+
+            const confirmDel = confirm(translate("delete_product_confirm") + `\n"${product.nome}"`);
+            if (confirmDel) {
+                state.products = state.products.filter(p => p.id !== productId);
+                delete state.orders[productId]; // clear matching orders items
+
+                saveProductsToLocalStorage();
+                saveOrdersToLocalStorage();
+                renderCatalog();
+                filterProducts();
+                showToast("Produto excluído / Produkt usunięty", "warning");
+                triggerAutoSyncCloud("products");
+            }
+        }
+
+        // Add Product Dialog trigger
+        function openProductModal(mode = 'add', productId = null) {
+            state.productModalMode = mode;
+            state.editingProductId = productId;
+
+            const modal = document.getElementById("product-modal");
+            const title = document.getElementById("product-modal-title");
+            const selectCat = document.getElementById("modal-product-category");
+            
+            // Populate category select options
+            let options = "";
+            state.categories.forEach(cat => {
+                options += `<option value="${cat.nome}" class="font-bold">${cat.nome}</option>`;
+            });
+            selectCat.innerHTML = options;
+
+            if (mode === 'add') {
+                title.innerText = translate("add_product");
+                document.getElementById("modal-product-name").value = "";
+                document.getElementById("modal-product-unit").value = "kg";
+            } else {
+                title.innerText = translate("edit_product");
+                const prodObj = state.products.find(p => p.id === productId);
+                if (prodObj) {
+                    document.getElementById("modal-product-name").value = prodObj.nome;
+                    document.getElementById("modal-product-category").value = prodObj.categoria;
+                    document.getElementById("modal-product-unit").value = prodObj.unidade;
+                }
+            }
+
+            modal.classList.remove("hidden");
+        }
+
+        function closeProductModal() {
+            document.getElementById("product-modal").classList.add("hidden");
+        }
+
+        function saveProductModal() {
+            const name = (document.getElementById("modal-product-name").value || "").trim();
+            const category = document.getElementById("modal-product-category").value;
+            const unit = document.getElementById("modal-product-unit").value;
+
+            if (!name) {
+                showToast("Por favor insira um nome!", "warning");
+                return;
+            }
+
+            if (state.productModalMode === 'add') {
+                const newProduct = {
+                    id: Date.now(),
+                    nome: name,
+                    categoria: category,
+                    unidade: unit
+                };
+                state.products.push(newProduct);
+                showToast("Adicionado com sucesso!", "success");
+            } else {
+                const prodIndex = state.products.findIndex(p => p.id === state.editingProductId);
+                if (prodIndex !== -1) {
+                    // Cache matching quantities key index in order database just in case category or name changed
+                    const prevProduct = state.products[prodIndex];
+                    state.products[prodIndex] = {
+                        id: state.editingProductId,
+                        nome: name,
+                        categoria: category,
+                        unidade: unit
+                    };
+                    showToast("Salvo com sucesso!", "success");
+                }
+            }
+
+            saveProductsToLocalStorage();
+            closeProductModal();
+            renderCatalog();
+            filterProducts();
+            triggerAutoSyncCloud("produtos");
+        }
+
+        function confirmResetCatalog() {
+            const userConfirm = confirm(translate("reset_catalog") + "?");
+            if (userConfirm) {
+                state.categories = [...DEFAULT_CATEGORIES];
+                state.products = [...DEFAULT_PRODUCTS];
+                state.orders = {};
+
+                saveCategoriesToLocalStorage();
+                saveProductsToLocalStorage();
+                saveOrdersToLocalStorage();
+                
+                renderCatalog();
+                renderCategoriesManager();
+                filterProducts();
+                showToast("Catálogo redefinido com sucesso!", "success");
+                triggerAutoSyncCloud("all");
+            }
+        }
+
+        // ====================================================================
+        // TAB 2: CATEGORY OPERATIONS (CATEGORIES MANAGEMENT)
+        // ====================================================================
+        function renderCategoriesManager() {
+            const container = document.getElementById("category-list");
+            if (!container) return;
+
+            // Sorting by positions
+            state.categories.sort((a,b) => a.position - b.position);
+
+            if (state.categories.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-10 bg-slate-900/40 rounded-2xl border border-slate-800">
+                        <span class="text-3xl">📭</span>
+                        <p class="text-slate-400 text-xs mt-1">Brak kategorii w bazie.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = "";
+            state.categories.forEach((cat, index) => {
+                const countOfAssociated = state.products.filter(p => p.categoria === cat.nome).length;
+
+                html += `
+                    <div class="bg-gradient-to-r from-slate-900 to-slate-850 p-3.5 rounded-2xl border border-slate-800 shadow-md flex items-center justify-between gap-3 hover:border-slate-700/60 transition-all">
+                        <div class="flex items-center space-x-3.5">
+                            <!-- Drag Sorting positions -->
+                            <div class="flex flex-col space-y-0.5">
+                                <button onclick="reorderCategoryPosition(${cat.id}, -1)" ${index === 0 ? 'disabled class="text-slate-700 cursor-not-allowed"' : 'class="text-sky-400 hover:text-sky-300"'} title="Przesuń w górę">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"></path></svg>
+                                </button>
+                                <button onclick="reorderCategoryPosition(${cat.id}, 1)" ${index === state.categories.length - 1 ? 'disabled class="text-slate-700 cursor-not-allowed"' : 'class="text-sky-400 hover:text-sky-300"'} title="Przesuń w dół2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                                </button>
+                            </div>
+
+                            <span class="text-3xl filter drop-shadow">${cat.icone || '📁'}</span>
+                            <div>
+                                <h4 class="text-sm font-semibold text-slate-100 flex items-center gap-2">
+                                    ${cat.nome}
+                                    <span style="background-color: ${cat.cor}" class="w-2.5 h-2.5 rounded-full inline-block shadow-inner"></span>
+                                </h4>
+                                <span class="text-[10px] text-slate-500 font-extrabold uppercase mt-0.5 block tracking-widest">${countOfAssociated} produtos cadastrados</span>
+                            </div>
+                        </div>
+
+                        <!-- Action controls -->
+                        <div class="flex items-center space-x-1 flex-shrink-0">
+                            <button onclick="openCategoryModal('edit', ${cat.id})" class="p-2 text-sky-400 hover:bg-sky-950/40 rounded-xl transition-all border border-transparent hover:border-sky-900/30" title="Edytuj">
+                                <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            </button>
+                            <button onclick="deleteCategory(${cat.id}, '${cat.nome}')" class="p-2 text-rose-400 hover:bg-rose-950/40 rounded-xl transition-all border border-transparent hover:border-rose-900/30" title="Usuń">
+                                <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function reorderCategoryPosition(catId, direction) {
+            const list = [...state.categories].sort((a,b) => a.position - b.position);
+            const idx = list.indexOfFirst(c => c.id === catId);
+            if (idx === -1) return;
+
+            const targetIdx = idx + direction;
+            if (targetIdx < 0 || targetIdx >= list.size) return;
+
+            // Fix position assignments
+            const currentObj = list[idx];
+            const companionObj = list[targetIdx];
+
+            // Swap position indices
+            const tempPos = currentObj.position;
+            currentObj.position = companionObj.position;
+            companionObj.position = tempPos;
+
+            state.categories = list;
+            saveCategoriesToLocalStorage();
+            renderCategoriesManager();
+            renderCategoryChips();
+            filterProducts();
+            showToast("Mudado de posição!!", "success");
+            triggerAutoSyncCloud("categorias");
+        }
+
+        // JS Array Polyfill
+        Array.prototype.indexOfFirst = function(callback) {
+            for (let i = 0; i < this.length; i++) {
+                if (callback(this[i])) return i;
+            }
+            return -1;
+        };
+
+        function deleteCategory(id, categoryName) {
+            const confirmDel = confirm(translate("delete_category") + ` "${categoryName}"?\n` + translate("delete_product_confirm") + `\n🚨 UWAGA: Wszystkie produkty z tej kategorii zostaną trwale usunięte!`);
+            
+            if (confirmDel) {
+                // Remove category
+                state.categories = state.categories.filter(c => c.id !== id);
+                
+                // Cascade remove associated products and matching order counts
+                const associatedProdsId = state.products.filter(p => p.categoria === categoryName).map(p => p.id);
+                state.products = state.products.filter(p => p.categoria !== categoryName);
+                
+                associatedProdsId.forEach(pId => {
+                    delete state.orders[pId];
+                });
+
+                saveCategoriesToLocalStorage();
+                saveProductsToLocalStorage();
+                saveOrdersToLocalStorage();
+                
+                renderCategoriesManager();
+                renderCategoryChips();
+                filterProducts();
+                showToast("Excluído com sucesso!", "warning");
+                triggerAutoSyncCloud("all");
+            }
+        }
+
+        // Dialog Categories popup
+        function openCategoryModal(mode = 'add', catId = null) {
+            state.categoryModalMode = mode;
+            state.editingCategoryId = catId;
+
+            const modal = document.getElementById("category-modal");
+            const title = document.getElementById("category-modal-title");
+
+            if (mode === 'add') {
+                title.innerText = translate("add_category");
+                document.getElementById("modal-category-name").value = "";
+                document.getElementById("modal-category-icon").value = "📁";
+                document.getElementById("modal-category-color").value = "#0ea5e9";
+                document.getElementById("modal-category-color-picker").value = "#0ea5e9";
+            } else {
+                title.innerText = translate("edit_category");
+                const catObj = state.categories.find(c => c.id === catId);
+                if (catObj) {
+                    document.getElementById("modal-category-name").value = catObj.nome;
+                    document.getElementById("modal-category-icon").value = catObj.icone;
+                    document.getElementById("modal-category-color").value = catObj.cor;
+                    document.getElementById("modal-category-color-picker").value = catObj.cor || "#0ea5e9";
+                }
+            }
+
+            modal.classList.remove("hidden");
+        }
+
+        function closeCategoryModal() {
+            document.getElementById("category-modal").classList.add("hidden");
+        }
+
+        function saveCategoryModal() {
+            const name = (document.getElementById("modal-category-name").value || "").trim();
+            const icon = (document.getElementById("modal-category-icon").value || "").trim();
+            const color = (document.getElementById("modal-category-color").value || "#0ea5e9").trim();
+
+            if (!name) {
+                showToast("Por favor insira um nome de categoria!", "warning");
+                return;
+            }
+
+            if (state.categoryModalMode === 'add') {
+                const nextPos = state.categories.length;
+                const newCat = {
+                    id: Date.now(),
+                    nome: name,
+                    icone: icon,
+                    cor: color,
+                    position: nextPos
+                };
+                state.categories.push(newCat);
+                showToast("Categoria adicionada!", "success");
+            } else {
+                const catIndex = state.categories.findIndex(c => c.id === state.editingCategoryId);
+                if (catIndex !== -1) {
+                    const prevCatObj = state.categories[catIndex];
+                    // Cascade change product categories names if name changed
+                    if (prevCatObj.nome !== name) {
+                        state.products.forEach(p => {
+                            if (p.categoria === prevCatObj.nome) {
+                                p.categoria = name;
+                            }
+                        });
+                        saveProductsToLocalStorage();
+                    }
+
+                    state.categories[catIndex] = {
+                        id: state.editingCategoryId,
+                        nome: name,
+                        icone: icon,
+                        cor: color,
+                        position: prevCatObj.position
+                    };
+                    showToast("Salvo!", "success");
+                }
+            }
+
+            saveCategoriesToLocalStorage();
+            closeCategoryModal();
+            renderCategoriesManager();
+            renderCategoryChips();
+            filterProducts();
+            triggerAutoSyncCloud("categorias");
+        }
+
+        // ====================================================================
+        // TAB 3: REPORTS ENGINE
+        // ====================================================================
+        function setReportSubTab(subTab) {
+            state.reportSubTab = subTab;
+            
+            const btnTable = document.getElementById("report-tab-table");
+            const btnText = document.getElementById("report-tab-text");
+
+            if (subTab === 'table') {
+                btnTable.classList.add('border-sky-400', 'text-sky-400');
+                btnTable.classList.remove('border-transparent', 'text-slate-400');
+                btnText.classList.add('border-transparent', 'text-slate-400');
+                btnText.classList.remove('border-sky-400', 'text-sky-400');
+            } else {
+                btnText.classList.add('border-sky-400', 'text-sky-400');
+                btnText.classList.remove('border-transparent', 'text-slate-400');
+                btnTable.classList.add('border-transparent', 'text-slate-400');
+                btnTable.classList.remove('border-sky-400', 'text-sky-400');
+            }
+
+            renderReports();
+        }
+
+        /**
+         * Compiles list of active order items grouped by category 
+         * and sorted based on category system positions list
+         */
+        function getGroupedReportItems() {
+            const activeOrdersList = [];
+            
+            Object.entries(state.orders).forEach(([prodId, ord]) => {
+                if (ord.quantidade > 0) {
+                    const p = state.products.find(prod => prod.id === parseInt(prodId));
+                    if (p) {
+                        activeOrdersList.push({
+                            id: p.id,
+                            nome: p.nome,
+                            categoria: p.categoria,
+                            unidade: p.unidade,
+                            quantidade: ord.quantidade,
+                            prioridade: ord.prioridade
+                        });
+                    }
+                }
+            });
+
+            // Group
+            const grouped = {};
+            activeOrdersList.forEach(item => {
+                if (!grouped[item.categoria]) {
+                    grouped[item.categoria] = [];
+                }
+                grouped[item.categoria].push(item);
+            });
+
+            // Sort groups entry in category priority position list order
+            const sortedGroupEntries = Object.entries(grouped).sort((a,b) => {
+                const catA = state.categories.find(c => c.nome === a[0]);
+                const catB = state.categories.find(c => c.nome === b[0]);
+                const posA = catA ? catA.position : 9999;
+                const posB = catB ? catB.position : 9999;
+                return posA - posB;
+            });
+
+            return sortedGroupEntries;
+        }
+
+        function renderReports() {
+            const container = document.getElementById("report-content-box");
+            if (!container) return;
+
+            const groupedEntries = getGroupedReportItems();
+
+            if (groupedEntries.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-slate-500">
+                        <span class="text-4xl block mb-2">📭</span>
+                        <p class="text-sm font-semibold" data-l10n="no_active_items">Sem itens ativos na encomenda.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            if (state.reportSubTab === 'table') {
+                // Table layout
+                let html = '<div class="space-y-4">';
+                
+                groupedEntries.forEach(([catName, items]) => {
+                    const catObj = state.categories.find(c => c.nome === catName) || { icone: '📁', cor: '#475569' };
+                    const accentColor = catObj.cor || '#475569';
+
+                    html += `
+                        <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow">
+                            <div style="background-color: ${accentColor}10" class="px-3 py-2 border-b border-slate-800 flex items-center gap-1.5">
+                                <span class="text-md">${catObj.icone || '📁'}</span>
+                                <span class="text-[10px] uppercase font-black tracking-widest text-[#f8fafc]">${catName}</span>
+                            </div>
+
+                            <table class="w-full text-xs text-left text-slate-300">
+                                <thead class="bg-slate-950 text-[10px] text-slate-500 uppercase tracking-wider">
+                                    <tr>
+                                        <th class="px-3 py-2 font-bold select-none text-slate-500">Item</th>
+                                        <th class="px-3 py-2 text-right">Qty</th>
+                                        <th class="px-3 py-2 text-center text-rose-400">🚨</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-800/40">
+                    `;
+
+                    items.forEach(it => {
+                        html += `
+                            <tr class="hover:bg-slate-850/30">
+                                <td class="px-3 py-2 font-medium text-slate-100">${it.nome}</td>
+                                <td class="px-3 py-2 text-right monospace font-semibold text-sky-400">${it.quantidade} <span class="text-[10px] text-slate-500 font-sans font-bold uppercase select-none">${it.unidade}</span></td>
+                                <td class="px-3 py-2 text-center monospace text-rose-500 font-bold">${it.prioridade === 'Urgente' ? '🚨' : ''}</td>
+                            </tr>
+                        `;
+                    });
+
+                    html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+                container.innerHTML = html;
+            } else {
+                // Pre-formatted textbox
+                const textReport = compilePlainReportString();
+                container.innerHTML = `
+                    <textarea id="plain-report-area" readonly class="w-full h-80 bg-slate-950 text-slate-200 border border-slate-800 rounded-xl p-3 text-xs monospace focus:outline-none select-text focus:ring-1 focus:ring-sky-500 leading-relaxed">${textReport}</textarea>
+                `;
+            }
+        }
+
+        function compilePlainReportString() {
+            const timestamp = new Date().toLocaleString("pt-PT", { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute:'2-digit' });
+            let sb = `${translate("report_header_text")}\n`;
+            sb += `      ${timestamp}\n`;
+            sb += `========================\n\n`;
+
+            const groupedEntries = getGroupedReportItems();
+            groupedEntries.forEach(([catName, items]) => {
+                sb += `📁 ${translate("category_label")}: ${catName}\n`;
+                sb += `------------------------------------\n`;
+                
+                items.forEach(it => {
+                    sb += `* ${it.nome}: ${it.quantidade} ${it.unidade}`;
+                    if (it.prioridade === 'Urgente') {
+                        sb += ` 🚨 ${translate("urgent").toUpperCase()}`;
+                    }
+                    sb += `\n`;
+                });
+                sb += `\n`;
+            });
+
+            return sb;
+        }
+
+        // Exporters actions
+        function shareWhatsApp() {
+            const reportText = compilePlainReportString();
+            const waUrl = `https://wa.me/?text=${encodeURIComponent(reportText)}`;
+            window.open(waUrl, '_blank');
+        }
+
+        function shareEmail() {
+            const reportText = compilePlainReportString();
+            const mailto = `mailto:?subject=${encodeURIComponent('Compras Gastro - Encomenda')}&body=${encodeURIComponent(reportText)}`;
+            window.location.href = mailto;
+        }
+
+        function copyFormattedReport() {
+            const reportText = compilePlainReportString();
+            navigator.clipboard.writeText(reportText).then(() => {
+                showToast(translate("copied_success"), "success");
+            }).catch(err => {
+                showToast("Copping failed!", "error");
+            });
+        }
+
+        // ====================================================================
+        // TAB 4: GDRIVE SYNCHRONIZER ENGINE (GAS WEB APP PROXY INTEGRATION)
+        // ====================================================================
+        function updateSyncModeUI() {
+            const mMaster = document.getElementById("sync-mode-master");
+            const mUser = document.getElementById("sync-mode-user");
+
+            if (state.appMode === "MASTER") {
+                mMaster.classList.add('border-sky-500', 'text-sky-400', 'bg-sky-950/20');
+                mMaster.classList.remove('border-slate-700', 'text-slate-400', 'bg-transparent');
+                mUser.classList.add('border-slate-700', 'text-slate-400', 'bg-transparent');
+                mUser.classList.remove('border-sky-500', 'text-sky-400', 'bg-sky-950/20');
+            } else {
+                mUser.classList.add('border-sky-500', 'text-sky-400', 'bg-sky-950/20');
+                mUser.classList.remove('border-slate-700', 'text-slate-400', 'bg-transparent');
+                mMaster.classList.add('border-slate-700', 'text-slate-400', 'bg-transparent');
+                mMaster.classList.remove('border-sky-500', 'text-sky-400', 'bg-sky-950/20');
+            }
+        }
+
+        function setSyncMode(mode) {
+            state.appMode = mode;
+            localStorage.setItem("gastro_app_mode", mode);
+            updateSyncModeUI();
+            terminalLog(`[SETTINGS] Mode of operation set to: ${mode}`);
+            showToast("Modo alterado / Tryb zmieniony", "info");
+        }
+
+        function saveSyncSettings() {
+            const urlInput = (document.getElementById("gdrive-api-url").value || "").trim();
+            const tokenInput = (document.getElementById("gdrive-security-token").value || "").trim();
+
+            state.gasApiUrl = urlInput;
+            state.gasSecurityToken = tokenInput;
+
+            localStorage.setItem("gastro_gas_url", urlInput);
+            localStorage.setItem("gastro_gas_token", tokenInput);
+
+            showToast("Konfiguracja zapisana!", "success");
+            terminalLog(`[SETTINGS] Saved GAS API connection variables. Credentials written to localStorage.`);
+
+            if (state.gasApiUrl && state.gasSecurityToken) {
+                cloudPullSync(); // trigger auto sync tests
+            }
+        }
+
+        /**
+         * Copies a unified shareable configuration link representing these credentials.
+         * The employee directly opens the link on their mobile browser to pre-configure immediately!
+         */
+        function copyPreConfigShareLink() {
+            if (!state.gasApiUrl || !state.gasSecurityToken) {
+                showToast("Najpierw skonfiguruj i zapisz API!", "warning");
+                return;
+            }
+
+            const cleanUrl = window.location.origin + window.location.pathname;
+            const paramUrl = encodeURIComponent(state.gasApiUrl);
+            const paramTok = encodeURIComponent(state.gasSecurityToken);
+            
+            const shareLink = `${cleanUrl}?url=${paramUrl}&token=${paramTok}&mode=USER`;
+            
+            navigator.clipboard.writeText(shareLink).then(() => {
+                showToast("Copied Bridge Config Link!", "success");
+                terminalLog(`[SHARE] Pre-configure employee bridge link copied successfully:\n${shareLink}`);
+            }).catch(err => {
+                showToast("Copy failed", "error");
+            });
+        }
+
+        // Trigger auto upload sync if connection is setup
+        function triggerAutoSyncCloud(scope) {
+            if (!state.gasApiUrl || !state.gasSecurityToken) return;
+            
+            terminalLog(`[AUTO-SYNC] Triggering background push upload for scoop: ${scope}...`);
+            cloudPushSync(scope, true); // silent auto push background
+        }
+
+        // UI trigger for Pull
+        function forceCloudPull() {
+            if (!state.gasApiUrl || !state.gasSecurityToken) {
+                showToast("Najpierw uzupełnij konfigurację API!", "warning");
+                return;
+            }
+            cloudPullSync(false);
+        }
+
+        // UI trigger for Push
+        function forceCloudPush() {
+            if (!state.gasApiUrl || !state.gasSecurityToken) {
+                showToast("Najpierw uzupełnij konfigurację API!", "warning");
+                return;
+            }
+            cloudPushSync("all", false);
+        }
+
+        /**
+         * Low level GAS REST interface connector
+         */
+        async function callGasProxyAPI(action, fileName, bodyContent = null) {
+            let url = `${state.gasApiUrl}?action=${action}&token=${encodeURIComponent(state.gasSecurityToken)}`;
+            if (fileName) {
+                url += `&fileName=${fileName}`;
+            }
+
+            const options = {
+                method: bodyContent ? 'POST' : 'GET',
+                mode: 'cors',
+                headers: {
+                    // Let web-apps submit JSON cleanly
+                    'Content-Type': 'text/plain' 
+                }
+            };
+
+            if (bodyContent) {
+                options.body = bodyContent;
+            }
+
+            const response = await fetch(url, options);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status} ${response.statusText}`);
+            }
+
+            // If we are downloading a raw JSON file, response contents might be direct JSON string representing the file.
+            // If it succeeded, Google Apps Script TextOutput usually brings text string representing the product array or result
+            const rawText = await response.text();
+            
+            try {
+                return JSON.parse(rawText);
+            } catch (err) {
+                // If the response is raw json file representation it parses nicely. 
+                // In some cases if GAS returns raw JSON on file content we just return parsed content.
+                return rawText; 
+            }
+        }
+
+        /**
+         * Cloud Pull Sync Logic
+         */
+        async function cloudPullSync(silent = false) {
+            if (!silent) {
+                showSyncBanner(true, "Downloading files...");
+            }
+            setConnectionStateUI("syncing");
+            terminalLog(`[SYNC-PULL] Initializing sync download from Google Drive folder "AgtoidGastro"...`);
+
+            try {
+                // Perform concurrent calls using Promise.all to load categories, products and orders
+                const [catsRep, prodsRep, ordersRep] = await Promise.all([
+                    callGasProxyAPI("download", "categorias.json").catch(e => {
+                        terminalLog(`[WARN] Categorias download skipped or file missing: ${e.message}`);
+                        return null;
+                    }),
+                    callGasProxyAPI("download", "produtos.json").catch(e => {
+                        terminalLog(`[WARN] Produtos download skipped or file missing: ${e.message}`);
+                        return null;
+                    }),
+                    callGasProxyAPI("download", "pedido.json").catch(e => {
+                        terminalLog(`[WARN] Pedido download skipped or file missing: ${e.message}`);
+                        return null;
+                    })
+                ]);
+
+                let itemsUpdated = false;
+
+                // 1. Process categories (Skip in USER mode to protect admin config if preferred? Or pull inside all modes so worker has category indices)
+                if (catsRep && Array.isArray(catsRep)) {
+                    state.categories = catsRep;
+                    saveCategoriesToLocalStorage();
+                    itemsUpdated = true;
+                    terminalLog(`[DATABASE] Loaded ${catsRep.length} categories from cloud.`);
+                } else if (catsRep && typeof catsRep === 'string' && catsRep.startsWith('[')) {
+                    state.categories = JSON.parse(catsRep);
+                    saveCategoriesToLocalStorage();
+                    itemsUpdated = true;
+                    terminalLog(`[DATABASE] Deserialized ${state.categories.length} categories.`);
+                }
+
+                // 2. Process products
+                if (prodsRep && Array.isArray(prodsRep)) {
+                    state.products = prodsRep;
+                    saveProductsToLocalStorage();
+                    itemsUpdated = true;
+                    terminalLog(`[DATABASE] Loaded ${prodsRep.length} products from cloud.`);
+                } else if (prodsRep && typeof prodsRep === 'string' && prodsRep.startsWith('[')) {
+                    state.products = JSON.parse(prodsRep);
+                    saveProductsToLocalStorage();
+                    itemsUpdated = true;
+                    terminalLog(`[DATABASE] Deserialized ${state.products.length} products.`);
+                }
+
+                // 3. Process Live orders
+                // In Master and User mode, we overwrite local order state with live active ordres.
+                if (ordersRep) {
+                    let parsedOrders = null;
+                    if (Array.isArray(ordersRep)) {
+                        parsedOrders = ordersRep;
+                    } else if (typeof ordersRep === 'string' && ordersRep.startsWith('[')) {
+                        parsedOrders = JSON.parse(ordersRep);
+                    }
+
+                    if (parsedOrders && Array.isArray(parsedOrders)) {
+                        const newOrdersObj = {};
+                        parsedOrders.forEach(it => {
+                            if (it.id) {
+                                newOrdersObj[it.id] = {
+                                    quantidade: it.quantidade || 0,
+                                    prioridade: it.prioridade || "Normal"
+                                };
+                            }
+                        });
+                        state.orders = newOrdersObj;
+                        saveOrdersToLocalStorage();
+                        itemsUpdated = true;
+                        terminalLog(`[DATABASE] Synchronized ${parsedOrders.length} active order items from cloud.`);
+                    }
+                }
+
+                // Empty state folder checks
+                if (!catsRep && !prodsRep && state.appMode === "MASTER") {
+                    terminalLog(`[WARN] Cloud directory appears empty. Uploading default setup values...`);
+                    await cloudPushSync("all", true);
+                }
+
+                // Force layout rewrites
+                if (itemsUpdated) {
+                    renderCategoryChips();
+                    filterProducts();
+                    renderCatalog();
+                    renderCategoriesManager();
+                    renderReports();
+                }
+
+                setConnectionStateUI("online");
+                terminalLog(`[OK] Cloud-to-Local synchronization completed successfully.`);
+                if (!silent) {
+                    showToast("Sincronizado com sucesso!", "success");
+                }
+            } catch (err) {
+                setConnectionStateUI("offline");
+                terminalLog(`[ERROR] Cloud download fail! Reason: ${err.message}`);
+                if (!silent) {
+                    showToast("Erro ao sincronizar chmura!", "error");
+                }
+            } finally {
+                showSyncBanner(false);
+            }
+        }
+
+        /**
+         * Cloud Push Sync Logic
+         */
+        async function cloudPushSync(scope = "all", silent = false) {
+            // USER MODES SECURITY RESTRICTION: Employees can ONLY push orders (pedido.json)! 
+            // They cannot overwrite catalog structure (categorias or produtos files).
+            if (state.appMode === "USER" && scope !== "pedido") {
+                terminalLog(`[SECURITY] USER mode active. Push block skipped for scope: "${scope}". User devices are forbidden from altering catalogs.`);
+                return;
+            }
+
+            if (!silent) {
+                showSyncBanner(true, "Uploading files...");
+            }
+            setConnectionStateUI("syncing");
+            terminalLog(`[SYNC-PUSH] Initializing local push to Google Drive. Scope: "${scope}"...`);
+
+            try {
+                // 1. Upload Categories
+                if (scope === "all" || scope === "categorias") {
+                    // Map categories to matches JSON API representation exactly
+                    const payload = state.categories.map(c => ({
+                        id: c.id,
+                        nome: c.nome,
+                        cor: c.cor,
+                        icone: c.icone
+                    }));
+                    terminalLog(`[UPLOAD] Uploading file "categorias.json"...`);
+                    const result = await callGasProxyAPI("upload", "categorias.json", JSON.stringify(payload));
+                    terminalLog(`[UPLOAD-OK] categorias.json: ${result.message || 'Updated success.'}`);
+                }
+
+                // 2. Upload Products
+                if (scope === "all" || scope === "produtos") {
+                    const payload = state.products.map(p => ({
+                        id: p.id,
+                        nome: p.nome,
+                        categoria: p.categoria,
+                        unidade: p.unidade
+                    }));
+                    terminalLog(`[UPLOAD] Uploading file "produtos.json"...`);
+                    const result = await callGasProxyAPI("upload", "produtos.json", JSON.stringify(payload));
+                    terminalLog(`[UPLOAD-OK] produtos.json: ${result.message || 'Updated success.'}`);
+                }
+
+                // 3. Upload Live Orders (Pedido)
+                if (scope === "all" || scope === "pedido") {
+                    const payload = [];
+                    Object.entries(state.orders).forEach(([prodId, ord]) => {
+                        if (ord.quantidade > 0) {
+                            const p = state.products.find(prod => prod.id === parseInt(prodId));
+                            if (p) {
+                                payload.push({
+                                    id: p.id,
+                                    nome: p.nome,
+                                    categoria: p.categoria,
+                                    unidade: p.unidade,
+                                    quantidade: ord.quantidade,
+                                    prioridade: ord.prioridade
+                                });
+                            }
+                        }
+                    });
+
+                    terminalLog(`[UPLOAD] Uploading active orders array "pedido.json" (${payload.length} positions)...`);
+                    const result = await callGasProxyAPI("upload", "pedido.json", JSON.stringify(payload));
+                    terminalLog(`[UPLOAD-OK] pedido.json: ${result.message || 'Updated success.'}`);
+                }
+
+                setConnectionStateUI("online");
+                terminalLog(`[OK] Local-to-Cloud push completed successfully.`);
+                if (!silent) {
+                    showToast("Zapisano w chmurze!", "success");
+                }
+            } catch (err) {
+                setConnectionStateUI("offline");
+                terminalLog(`[ERROR] Push uploading sequence failed! Details: ${err.message}`);
+                if (!silent) {
+                    showToast("Erro ao salvar na nuvem!", "error");
+                }
+            } finally {
+                showSyncBanner(false);
+            }
+        }
+
+        // ====================================================================
+        // UTILITIES & DECORATORS (TOASTS, TERMINALS, BANNERS)
+        // ====================================================================
+        function setConnectionStateUI(stateStr) {
+            const badge = document.getElementById("cloud-status-badge");
+            const dot = document.getElementById("cloud-status-dot");
+            const txt = document.getElementById("cloud-status-text");
+
+            if (!badge || !dot || !txt) return;
+
+            if (stateStr === "online") {
+                dot.className = "w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block";
+                txt.innerText = translate("online");
+            } else if (stateStr === "syncing") {
+                dot.className = "w-1.5 h-1.5 rounded-full bg-amber-500 inline-block animate-pulse";
+                txt.innerText = "Syncing";
+            } else {
+                dot.className = "w-1.5 h-1.5 rounded-full bg-slate-500 inline-block";
+                txt.innerText = translate("offline");
+            }
+        }
+
+        function showSyncBanner(show, text = "") {
+            const banner = document.getElementById("sync-banner");
+            const txt = document.getElementById("sync-banner-text");
+            if (show) {
+                txt.innerText = text;
+                banner.classList.remove("hidden");
+            } else {
+                banner.classList.add("hidden");
+            }
+        }
+
+        function terminalLog(msg) {
+            const container = document.getElementById("logs-terminal");
+            if (!container) return;
+
+            const timeStr = new Date().toLocaleTimeString("pl-PL", { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const p = document.createElement("div");
+            p.className = (msg.includes("[ERROR]") ? "text-rose-450 font-bold" : (msg.includes("[OK]") || msg.includes("[SUCCESS]") ? "text-emerald-300 font-bold" : "text-stone-300"));
+            p.innerHTML = `<span class="text-slate-500 font-bold select-none">[${timeStr}]</span> ${msg}`;
+            container.appendChild(p);
+            
+            // Scroll down
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function clearTerminalLogs() {
+            const container = document.getElementById("logs-terminal");
+            if (container) {
+                container.innerHTML = `<div class="text-slate-500">// Terminal log cleared</div>`;
+            }
+        }
+
+        function showToast(message, type = "info") {
+            const container = document.getElementById("toast-container");
+            if (!container) return;
+
+            const toast = document.createElement("div");
+            
+            let bgClass = "bg-slate-800 text-slate-100 border-slate-700";
+            if (type === "success") bgClass = "bg-emerald-950 text-emerald-200 border-emerald-800";
+            if (type === "warning") bgClass = "bg-amber-950 text-amber-200 border-amber-850";
+            if (type === "error") bgClass = "bg-rose-950 text-rose-200 border-rose-900";
+
+            toast.className = `p-3.5 rounded-xl border shadow-2xl flex items-center justify-between gap-3 text-xs opacity-0 translate-y-2 transition-all duration-300 pointer-events-auto ${bgClass}`;
+            toast.innerHTML = `
+                <span>${message}</span>
+                <button onclick="this.parentElement.remove()" class="text-[10px] uppercase font-black tracking-widest leading-none text-current hover:opacity-80">Close</button>
+            `;
+
+            container.appendChild(toast);
+            
+            // Trigger animation
+            setTimeout(() => {
+                toast.classList.remove("opacity-0", "translate-y-2");
+            }, 50);
+
+            // Auto dismiss after 3 seconds
+            setTimeout(() => {
+                toast.classList.add("opacity-0", "translate-y-2");
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

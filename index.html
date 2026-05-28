@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Compras Gastro - Web App</title>
+    
+    <!-- PWA Standard Tags -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="apple-touch-icon" href="icon.svg">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0ea5e9">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Custom configurations and imports for fonts -->
@@ -368,6 +376,43 @@
                     </div>
                 </div>
 
+                <!-- PWA Installation Panel -->
+                <div id="pwa-install-panel" class="bg-slate-900 rounded-2xl p-4 border border-slate-800 space-y-3.5 shadow-xl">
+                    <div class="flex items-center space-x-2 pb-2 border-b border-slate-800">
+                        <span class="text-xl">📲</span>
+                        <div>
+                            <span class="block text-sm font-bold text-white uppercase tracking-wider" data-l10n="pwa_title">Instalacja Aplikacji (PWA)</span>
+                            <span class="text-[10px] text-slate-400 font-medium font-sans uppercase tracking-wide" data-l10n="pwa_subtitle">Dodaj do ekranu głównego</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed font-sans" data-l10n="pwa_desc">
+                        Możesz zainstalować ten system jako aplikację na swoim telefonie lub komputerze. Będzie działać szybciej, bez paska adresu przeglądarki i ma pełne wsparcie offline!
+                    </p>
+                    <div id="pwa-action-container" class="space-y-3">
+                        <!-- Auto install button trigger (Normally hidden on desktops/unsupported browsers) -->
+                        <button id="pwa-install-btn" class="hidden w-full py-2.5 bg-gradient-to-r from-emerald-600 to-sky-600 hover:from-emerald-500 hover:to-sky-500 text-white font-extrabold rounded-xl shadow-lg transition-all text-xs uppercase tracking-widest flex items-center justify-center space-x-2">
+                            <span>✨</span>
+                            <span data-l10n="pwa_btn_install">Zainstaluj na tym urządzeniu</span>
+                        </button>
+                        <!-- Manual install instruction panel -->
+                        <div id="pwa-instructions-hint" class="bg-slate-850 p-3.5 rounded-xl border border-slate-800/80 text-[11px] text-slate-400 space-y-2 leading-relaxed">
+                            <span class="font-bold text-slate-300 block mb-1" data-l10n="pwa_manual_title">💡 Instrukcja ręcznej instalacji:</span>
+                            <div class="flex items-start space-x-2">
+                                <span class="text-sky-400 text-xs font-bold font-mono">1.</span>
+                                <span data-l10n="pwa_step_1">W przeglądarce (Chrome/Edge/Safari), kliknij menu (trzy kropki ⋮ lub przycisk udostępnij ⎋).</span>
+                            </div>
+                            <div class="flex items-start space-x-2">
+                                <span class="text-sky-400 text-xs font-bold font-mono">2.</span>
+                                <span data-l10n="pwa_step_2">Wybierz opcję 'Dodaj do ekranu głównego' lub 'Zainstaluj aplikację'.</span>
+                            </div>
+                            <div class="flex items-start space-x-2">
+                                <span class="text-sky-400 text-xs font-bold font-mono">3.</span>
+                                <span data-l10n="pwa_step_3">Aplikacja zostanie dodana jako skrót z piękną ikoną 🥬 na pulpicie telefonu!</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Logs console Panel output terminal -->
                 <div class="bg-black rounded-2xl p-4 border border-slate-800 space-y-2.5 shadow-xl">
                     <div class="flex items-center justify-between text-[10px] text-slate-400 uppercase tracking-widest font-black font-sans">
@@ -526,6 +571,14 @@
         // L10N TRANSLATIONS DICTIONARY
         // ====================================================================
         const TRANSLATIONS = {
+            "pwa_title": { pt: "Instalação da App", pl: "Instalacja Aplikacji (PWA)", en: "App Install (PWA)" },
+            "pwa_subtitle": { pt: "Adicione ao seu ecrã principal", pl: "Dodaj do ekranu głównego", en: "Add to your homescreen" },
+            "pwa_desc": { pt: "Pode instalar este sistema como uma aplicação no seu telefone ou computador. Funcionará de forma mais rápida, sem a barra de endereço da web, e oferece suporte offline robusto!", pl: "Możesz zainstalować ten system jako aplikację na swoim telefonie lub komputerze. Będzie działać szybciej, bez paska adresu przeglądarki i ma pełne wsparcie offline!", en: "Install this app on your phone or computer. It runs faster, hides the address bar, and works fully offline!" },
+            "pwa_btn_install": { pt: "Instalar no Dispositivo", pl: "Zainstaluj na tym urządzeniu", en: "Install on this device" },
+            "pwa_manual_title": { pt: "💡 Instruções para instalação manual:", pl: "💡 Instrukcja ręcznej instalacji:", en: "💡 Manual installation instructions:" },
+            "pwa_step_1": { pt: "No navegador (Chrome/Edge/Safari), clique no menu (três pontos ⋮ ou ícone Partilhar ⎋).", pl: "W przeglądarce (Chrome/Edge/Safari), kliknij menu (trzy kropki ⋮ lub przycisk udostępnij ⎋).", en: "In your browser (Chrome/Edge/Safari), open the menu (three dots ⋮ or share icon ⎋)." },
+            "pwa_step_2": { pt: "Selecione a opção 'Adicionar ao ecrã principal' (Add to Home) ou 'Zainstaluj aplikację' (Install App).", pl: "Wybierz opcję 'Dodaj do ekranu głównego' lub 'Zainstaluj aplikację'.", en: "Select 'Add to Home Screen' or 'Install App'." },
+            "pwa_step_3": { pt: "O aplicativo será adicionado como um atalho com um belo ícone 🥬 no seu ecrã!", pl: "Aplikacja zostanie dodana jako skrót z piękną ikoną 🥬 na pulpicie telefonu!", en: "The app will be added with a premium 🥬 icon on your home screen!" },
             "app_name": { pt: "Compras gastro", pl: "Compras gastro", en: "Compras gastro" },
             "app_subtitle": { pt: "Gestão de encomendas por categoria", pl: "Zarządzanie zamówieniami wg kategorii", en: "Order management by category" },
             "app_subtitle_short": { pt: "Gestão de encomendas", pl: "Zarządzanie zamówieniami", en: "Order management" },
@@ -1775,31 +1828,36 @@
             const options = {
                 method: bodyContent ? 'POST' : 'GET',
                 mode: 'cors',
-                headers: {
-                    // Let web-apps submit JSON cleanly
-                    'Content-Type': 'text/plain' 
-                }
+                headers: {}
             };
 
             if (bodyContent) {
+                // We use 'text/plain' content type to ensure the browser performs a "simple request", 
+                // avoiding a CORS preflight OPTIONS request which Google Apps Script web apps do not support.
+                options.headers['Content-Type'] = 'text/plain';
                 options.body = bodyContent;
             }
 
-            const response = await fetch(url, options);
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status} ${response.statusText}`);
-            }
-
-            // If we are downloading a raw JSON file, response contents might be direct JSON string representing the file.
-            // If it succeeded, Google Apps Script TextOutput usually brings text string representing the product array or result
-            const rawText = await response.text();
-            
             try {
-                return JSON.parse(rawText);
-            } catch (err) {
-                // If the response is raw json file representation it parses nicely. 
-                // In some cases if GAS returns raw JSON on file content we just return parsed content.
-                return rawText; 
+                const response = await fetch(url, options);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status} ${response.statusText}`);
+                }
+
+                const rawText = await response.text();
+                try {
+                    return JSON.parse(rawText);
+                } catch (err) {
+                    return rawText; 
+                }
+            } catch (networkError) {
+                if (networkError.message && (networkError.message.includes("Failed to fetch") || networkError instanceof TypeError)) {
+                    terminalLog(`[CORS/DIAGNOSTIC] Połączenie zablokowane.`);
+                    terminalLog(`👉 1. Upewnij się, że używasz adresu wdrożenia produkcyjnego (kończy się na /exec, a nie /dev na końcu).`);
+                    terminalLog(`👉 2. W Apps Script: kliknij "Deploy" -> "Manage deployments" -> kliknij ikonę edycji (ołówka) dociążając wersję na "New version" oraz ustawiając dół na "Who has access: Anyone" (a nie "Only myself").`);
+                    terminalLog(`👉 3. Kliknij "Deploy", aby zatwierdzić nową konfigurację i upewnij się, że wklejony adres URL jest prawidłowy.`);
+                }
+                throw networkError;
             }
         }
 
@@ -2085,6 +2143,69 @@
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
         }
+
+        // ====================================================================
+        // PROGRESSIVE WEB APP (PWA) REGISTRATION & NATIVE INSTALL PROMPT
+        // ====================================================================
+        let deferredPrompt = null;
+
+        // Register Service Worker for offline operations
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then((registration) => {
+                        console.log('PWA Service Worker registered with scope:', registration.scope);
+                        setTimeout(() => {
+                            terminalLog("[PWA] Service Worker zarejestrowany! / Registrado! (Offline Ready 🥬)");
+                        }, 2000);
+                    })
+                    .catch((err) => {
+                        console.error('PWA Service Worker registration failed:', err);
+                    });
+            });
+        }
+
+        // Intercept native browser install prompt (Chrome/Edge/Android)
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent standard automatic bubble prompt from interrupting
+            e.preventDefault();
+            // Stash the event so we can trigger it in our custom button
+            deferredPrompt = e;
+            
+            // Unhide our gorgeous install button in G-Drive Tab console
+            const installBtn = document.getElementById('pwa-install-btn');
+            if (installBtn) {
+                installBtn.classList.remove('hidden');
+                terminalLog("[PWA] Wykryto możliwość instalacji! Przycisk szybkiego pobierania został włączony na dole.");
+            }
+        });
+
+        // Bind custom click event to trigger the native installation panel
+        document.getElementById('pwa-install-btn')?.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            
+            // Trigger browser prompt
+            deferredPrompt.prompt();
+            
+            // Collect user decision
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`PWA install outcome: ${outcome}`);
+            
+            // Clean up prompt reference
+            deferredPrompt = null;
+            
+            // Hide button after choice
+            const installBtn = document.getElementById('pwa-install-btn');
+            if (installBtn) {
+                installBtn.classList.add('hidden');
+            }
+        });
+
+        // App successfully installed listener
+        window.addEventListener('appinstalled', (evt) => {
+            terminalLog("[PWA] 🎉 Sukces! Aplikacja została zainstalowana pomyślnie na ekranie głównym.");
+            showToast("Aplikacja zainstalowana pomyślnie! / Instalado!", "success");
+        });
     </script>
 </body>
 </html>

@@ -684,8 +684,8 @@
             renderTerminalLogs();
             updateTabNavigationStates();
 
-            // Auto pull from chmura on first load if configured
-            if (state.gasApiUrl && state.gasSecurityToken) {
+            // Auto pull from chmura on first load if configured (token is optional)
+            if (state.gasApiUrl) {
                 terminalLog(`[STARTUP] Configured Apps Script endpoint detected. Commencing auto-pull...`);
                 cloudPullSync(true); // silent auto sync
             }
@@ -1761,7 +1761,7 @@
             showToast("Konfiguracja zapisana!", "success");
             terminalLog(`[SETTINGS] Saved GAS API connection variables. Credentials written to localStorage.`);
 
-            if (state.gasApiUrl && state.gasSecurityToken) {
+            if (state.gasApiUrl) {
                 cloudPullSync(); // trigger auto sync tests
             }
         }
@@ -1771,7 +1771,7 @@
          * The employee directly opens the link on their mobile browser to pre-configure immediately!
          */
         function copyPreConfigShareLink() {
-            if (!state.gasApiUrl || !state.gasSecurityToken) {
+            if (!state.gasApiUrl) {
                 showToast("Najpierw skonfiguruj i zapisz API!", "warning");
                 return;
             }
@@ -1792,7 +1792,7 @@
 
         // Trigger auto upload sync if connection is setup
         function triggerAutoSyncCloud(scope) {
-            if (!state.gasApiUrl || !state.gasSecurityToken) return;
+            if (!state.gasApiUrl) return;
             
             terminalLog(`[AUTO-SYNC] Triggering background push upload for scoop: ${scope}...`);
             cloudPushSync(scope, true); // silent auto push background
@@ -1800,7 +1800,7 @@
 
         // UI trigger for Pull
         function forceCloudPull() {
-            if (!state.gasApiUrl || !state.gasSecurityToken) {
+            if (!state.gasApiUrl) {
                 showToast("Najpierw uzupełnij konfigurację API!", "warning");
                 return;
             }
@@ -1809,7 +1809,7 @@
 
         // UI trigger for Push
         function forceCloudPush() {
-            if (!state.gasApiUrl || !state.gasSecurityToken) {
+            if (!state.gasApiUrl) {
                 showToast("Najpierw uzupełnij konfigurację API!", "warning");
                 return;
             }

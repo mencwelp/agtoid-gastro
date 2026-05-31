@@ -10,16 +10,47 @@
   "id": "/compras-gastro-webapp",
   "icons": [
     {
+      "src": "icon_96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon_192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon_512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
       "src": "icon.svg",
       "sizes": "72x72 96x96 128x128 144x144 152x152 192x192 384x384 512x512",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "icon.svg",
+      "src": "icon_512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot_mobile.png",
+      "sizes": "540x960",
+      "type": "image/png"
+    },
+    {
+      "src": "screenshot_desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
     }
   ],
   "categories": ["business", "food", "productivity"],
@@ -28,13 +59,27 @@
       "name": "Nova Encomenda",
       "short_name": "Encomenda",
       "url": "./index.html?tab=0",
-      "description": "Criar ou editar pedidos ativos"
+      "description": "Criar ou editar pedidos ativos",
+      "icons": [
+        {
+          "src": "icon_96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Sincronização Nuvem",
       "short_name": "Sincronizar",
       "url": "./index.html?tab=4",
-      "description": "Parâmetros e opções do Google Drive"
+      "description": "Parâmetros e opções do Google Drive",
+      "icons": [
+        {
+          "src": "icon_96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }

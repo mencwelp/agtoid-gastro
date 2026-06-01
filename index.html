@@ -8,13 +8,32 @@
     <!-- PWA Standard Tags -->
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/svg+xml" href="icon.svg">
-    <link rel="apple-touch-icon" href="icon.svg">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon_192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon_512.png">
+    <link rel="apple-touch-icon" href="icon_192.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="icon_192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icon_192.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="icon_192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Compras Gastro">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0ea5e9">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            850: '#1e293b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <!-- Custom configurations and imports for fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
@@ -23,6 +42,23 @@
             background-color: #0f172a; /* Deep Slate Background */
             color: #f1f5f9;
             -webkit-tap-highlight-color: transparent;
+        }
+        /* Style rule override to completely secure dark theme inputs, dialog forms, select tags and options */
+        input[type="text"], input[type="password"], select {
+            background-color: #1e293b !important;
+            color: #ffffff !important;
+        }
+        /* Autofill style override to prevent bright white backgrounds */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus {
+            -webkit-text-fill-color: #ffffff !important;
+            -webkit-box-shadow: 0 0 0px 1000px #1e293b inset !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+        select option {
+            background-color: #0f172a !important;
+            color: #ffffff !important;
         }
         .monospace {
             font-family: 'JetBrains Mono', monospace;
@@ -472,9 +508,12 @@
                 </div>
                 <div>
                     <label class="block text-[10px] text-slate-400 font-extrabold uppercase mb-1" data-l10n="category_label">Categoria</label>
-                    <select id="modal-product-category" class="w-full bg-slate-850 border border-slate-700/60 rounded-xl px-3.5 py-2 text-sm text-sky-400 focus:outline-none focus:border-sky-500 font-bold">
-                        <!-- Load category options -->
-                    </select>
+                    <div class="flex space-x-2">
+                        <select id="modal-product-category" class="flex-1 bg-slate-850 border border-slate-700/60 rounded-xl px-3.5 py-2 text-sm text-sky-400 focus:outline-none focus:border-sky-500 font-bold">
+                            <!-- Load category options -->
+                        </select>
+                        <button type="button" onclick="quickManageCategories()" class="px-3 bg-slate-800 hover:bg-slate-700 border border-slate-700/60 rounded-xl text-sm flex items-center justify-center transition-all select-none" title="Zarządzaj kategoriami / Manage categories">⚙️</button>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-[10px] text-slate-400 font-extrabold uppercase mb-1" data-l10n="unit_of_measure">Unidade de Medida</label>
@@ -508,7 +547,53 @@
                 </div>
                 <div>
                     <label class="block text-[10px] text-slate-400 font-extrabold uppercase mb-1" data-l10n="icon">Ícone (Emoji)</label>
-                    <input type="text" id="modal-category-icon" placeholder="ex: 🥬" class="w-full bg-slate-850 border border-slate-700/60 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-sky-500">
+                    <input type="text" id="modal-category-icon" placeholder="ex: 🥬" class="w-full bg-slate-850 border border-slate-700/60 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-sky-500 mb-2">
+                    
+                    <!-- Quick Gastro Emoji Picker -->
+                    <div class="p-2 bg-slate-950/40 border border-slate-800/80 rounded-xl">
+                        <span class="block text-[9px] text-sky-400 font-bold mb-1.5 uppercase tracking-wide">Wybierz ikonę (Emoji picker):</span>
+                        <div class="grid grid-cols-7 gap-1 max-h-24 overflow-y-auto text-lg">
+                            <span onclick="pickCategoryIcon('🥬')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🥬</span>
+                            <span onclick="pickCategoryIcon('🍊')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🍊</span>
+                            <span onclick="pickCategoryIcon('🥩')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🥩</span>
+                            <span onclick="pickCategoryIcon('🐟')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🐟</span>
+                            <span onclick="pickCategoryIcon('🥛')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🥛</span>
+                            <span onclick="pickCategoryIcon('🥤')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🥤</span>
+                            <span onclick="pickCategoryIcon('🍞')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🍞</span>
+                            
+                            <span onclick="pickCategoryIcon('❄️')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">❄️</span>
+                            <span onclick="pickCategoryIcon('🧅')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🧅</span>
+                            <span onclick="pickCategoryIcon('🥔')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🥔</span>
+                            <span onclick="pickCategoryIcon('🍅')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🍅</span>
+                            <span onclick="pickCategoryIcon('🥚')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🥚</span>
+                            <span onclick="pickCategoryIcon('🍗')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🍗</span>
+                            <span onclick="pickCategoryIcon('🧀')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🧀</span>
+                            
+                            <span onclick="pickCategoryIcon('🍕')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🍕</span>
+                            <span onclick="pickCategoryIcon('🍔')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🍔</span>
+                            <span onclick="pickCategoryIcon('🍟')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🍟</span>
+                            <span onclick="pickCategoryIcon('🍝')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🍝</span>
+                            <span onclick="pickCategoryIcon('🥗')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🥗</span>
+                            <span onclick="pickCategoryIcon('🍄')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🍄</span>
+                            <span onclick="pickCategoryIcon('🥦')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🥦</span>
+                            
+                            <span onclick="pickCategoryIcon('🍓')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🍓</span>
+                            <span onclick="pickCategoryIcon('🍋')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🍋</span>
+                            <span onclick="pickCategoryIcon('🦐')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🦐</span>
+                            <span onclick="pickCategoryIcon('☕')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">☕</span>
+                            <span onclick="pickCategoryIcon('🍷')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🍷</span>
+                            <span onclick="pickCategoryIcon('🍺')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🍺</span>
+                            <span onclick="pickCategoryIcon('🧂')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🧂</span>
+                            
+                            <span onclick="pickCategoryIcon('📦')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">📦</span>
+                            <span onclick="pickCategoryIcon('📁')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">📁</span>
+                            <span onclick="pickCategoryIcon('🏷️')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🏷️</span>
+                            <span onclick="pickCategoryIcon('🧹')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🧹</span>
+                            <span onclick="pickCategoryIcon('🧼')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🧼</span>
+                            <span onclick="pickCategoryIcon('🧻')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🧻</span>
+                            <span onclick="pickCategoryIcon('🍽️')" role="button" class="cursor-pointer hover:bg-slate-800/80 p-0.5 text-center rounded active:scale-120 transition-all select-none">🍽️</span>
+                        </div>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-[10px] text-slate-400 font-extrabold uppercase mb-1" data-l10n="color">Kolor (Hex)</label>
@@ -1031,7 +1116,7 @@
                                 <!-- Bell Priority Urgent Switch -->
                                 <button onclick="toggleProductUrgency(${prod.id})" 
                                         class="p-2.5 rounded-xl border transition-all ${isUrgent ? 'bg-rose-950 border-rose-800 text-rose-400 scale-105 shadow-md shadow-rose-900/10' : 'bg-slate-850 border-slate-700/60 text-slate-500 hover:text-slate-400'}">
-                                    <svg class="w-4.5 h-4.5" fill="${isUrgent ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.582A6.002 6.002 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                                    <svg class="w-5 h-5" fill="${isUrgent ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.582A6.002 6.002 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
                                 </button>
 
                                 <!-- Numeric Tactile Stepper Adjuster -->
@@ -1198,10 +1283,10 @@
                         <!-- CRUD row actions -->
                         <div class="flex items-center space-x-1 flex-shrink-0">
                             <button onclick="openProductModal('edit', ${prod.id})" class="p-2 text-sky-400 hover:bg-sky-950/40 rounded-xl transition-all border border-transparent hover:border-sky-900/30" title="Edytuj">
-                                <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                             </button>
                             <button onclick="deleteProduct(${prod.id})" class="p-2 text-rose-400 hover:bg-rose-950/40 rounded-xl transition-all border border-transparent hover:border-rose-900/30" title="Usuń">
-                                <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                             </button>
                         </div>
                     </div>
@@ -1376,10 +1461,10 @@
                         <!-- Action controls -->
                         <div class="flex items-center space-x-1 flex-shrink-0">
                             <button onclick="openCategoryModal('edit', ${cat.id})" class="p-2 text-sky-400 hover:bg-sky-950/40 rounded-xl transition-all border border-transparent hover:border-sky-900/30" title="Edytuj">
-                                <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                             </button>
                             <button onclick="deleteCategory(${cat.id}, '${cat.nome}')" class="p-2 text-rose-400 hover:bg-rose-950/40 rounded-xl transition-all border border-transparent hover:border-rose-900/30" title="Usuń">
-                                <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                             </button>
                         </div>
                     </div>
@@ -1482,6 +1567,16 @@
             document.getElementById("category-modal").classList.add("hidden");
         }
 
+        function pickCategoryIcon(emoji) {
+            document.getElementById("modal-category-icon").value = emoji;
+        }
+
+        function quickManageCategories() {
+            closeProductModal();
+            switchTab(2);
+            showToast("Zarządzaj kategoriami: Dodaj lub Edytuj!", "info");
+        }
+
         function saveCategoryModal() {
             const name = (document.getElementById("modal-category-name").value || "").trim();
             const icon = (document.getElementById("modal-category-icon").value || "").trim();
@@ -1515,6 +1610,11 @@
                             }
                         });
                         saveProductsToLocalStorage();
+                        
+                        // If selected active filter matches previous name, toggle to new one!
+                        if (state.activeCategory === prevCatObj.nome) {
+                            state.activeCategory = name;
+                        }
                     }
 
                     state.categories[catIndex] = {
@@ -1533,6 +1633,7 @@
             renderCategoriesManager();
             renderCategoryChips();
             filterProducts();
+            renderCatalog(); // Refresh products lists cards in realtime
             triggerAutoSyncCloud("categorias");
         }
 

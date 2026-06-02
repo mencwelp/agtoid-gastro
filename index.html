@@ -247,7 +247,7 @@
                         <p class="text-xs text-slate-400">Total: <span id="catalog-count-badge" class="font-extrabold text-sky-400">0</span></p>
                     </div>
 
-                    <button onclick="openProductModal()" class="flex items-center space-x-1 bg-sky-600 hover:bg-sky-500 text-white font-bold text-sm px-4 py-2.5 rounded-xl shadow-lg transition-all">
+                    <button id="add-product-btn" onclick="openProductModal()" class="flex items-center space-x-1 bg-sky-600 hover:bg-sky-500 text-white font-bold text-sm px-4 py-2.5 rounded-xl shadow-lg transition-all">
                         <span>➕</span><span data-l10n="add_product">Dodaj produkt</span>
                     </button>
                 </div>
@@ -264,7 +264,7 @@
                 </div>
 
                 <!-- Reset Catalog Button -->
-                <div class="pt-6 border-t border-slate-800 flex justify-end">
+                <div id="reset-catalog-container" class="pt-6 border-t border-slate-800 flex justify-end">
                     <button onclick="confirmResetCatalog()" class="flex items-center space-x-1.5 text-xs text-rose-300 font-bold bg-rose-950/20 border border-rose-900/60 hover:bg-rose-950/50 px-3.5 py-2 rounded-xl transition-all">
                         <span>🔄</span> <span data-l10n="reset_catalog">Zresetuj katalog</span>
                     </button>
@@ -279,7 +279,7 @@
                         <p class="text-xs text-slate-400">Gastro ordering sectors</p>
                     </div>
 
-                    <button onclick="openCategoryModal()" class="flex items-center space-x-1 bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm px-4 py-2.5 rounded-xl shadow-lg transition-all">
+                    <button id="add-category-btn" onclick="openCategoryModal()" class="flex items-center space-x-1 bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm px-4 py-2.5 rounded-xl shadow-lg transition-all">
                         <span>➕</span><span data-l10n="add_category">Nowa kategoria</span>
                     </button>
                 </div>
@@ -512,7 +512,7 @@
                         <select id="modal-product-category" class="flex-1 bg-slate-850 border border-slate-700/60 rounded-xl px-3.5 py-2 text-sm text-sky-400 focus:outline-none focus:border-sky-500 font-bold">
                             <!-- Load category options -->
                         </select>
-                        <button type="button" onclick="quickManageCategories()" class="px-3 bg-slate-800 hover:bg-slate-700 border border-slate-700/60 rounded-xl text-sm flex items-center justify-center transition-all select-none" title="Zarządzaj kategoriami / Manage categories">⚙️</button>
+                        <button id="quick-manage-cats-btn" type="button" onclick="quickManageCategories()" class="px-3 bg-slate-800 hover:bg-slate-700 border border-slate-700/60 rounded-xl text-sm flex items-center justify-center transition-all select-none" title="Zarządzaj kategoriami / Manage categories">⚙️</button>
                     </div>
                 </div>
                 <div>
@@ -1281,6 +1281,7 @@
                         </div>
 
                         <!-- CRUD row actions -->
+                        ${state.appMode === 'MASTER' ? `
                         <div class="flex items-center space-x-1 flex-shrink-0">
                             <button onclick="openProductModal('edit', ${prod.id})" class="p-2 text-sky-400 hover:bg-sky-950/40 rounded-xl transition-all border border-transparent hover:border-sky-900/30" title="Edytuj">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
@@ -1289,6 +1290,7 @@
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                             </button>
                         </div>
+                        ` : ''}
                     </div>
                 `;
             });
@@ -1297,6 +1299,10 @@
         }
 
         function deleteProduct(productId) {
+            if (state.appMode !== "MASTER") {
+                showToast("Brak uprawnień. Tylko administrator może usuwać produkty.", "error");
+                return;
+            }
             const product = state.products.find(p => p.id === productId);
             if (!product) return;
 
@@ -1316,6 +1322,10 @@
 
         // Add Product Dialog trigger
         function openProductModal(mode = 'add', productId = null) {
+            if (state.appMode !== "MASTER") {
+                showToast("Brak uprawnień. Tylko administrator może dodawać lub edytować produkty.", "error");
+                return;
+            }
             state.productModalMode = mode;
             state.editingProductId = productId;
 
@@ -1393,6 +1403,10 @@
         }
 
         function confirmResetCatalog() {
+            if (state.appMode !== "MASTER") {
+                showToast("Brak uprawnień. Tylko administrator może zresetować katalog.", "error");
+                return;
+            }
             const userConfirm = confirm(translate("reset_catalog") + "?");
             if (userConfirm) {
                 state.categories = [...DEFAULT_CATEGORIES];
@@ -1439,7 +1453,8 @@
                     <div class="bg-gradient-to-r from-slate-900 to-slate-850 p-3.5 rounded-2xl border border-slate-800 shadow-md flex items-center justify-between gap-3 hover:border-slate-700/60 transition-all">
                         <div class="flex items-center space-x-3.5">
                             <!-- Drag Sorting positions -->
-                            <div class="flex flex-col space-y-0.5">
+                            ${state.appMode === 'MASTER' ? `
+                            <div class="flex flex-col space-y-0.5 mr-1">
                                 <button onclick="reorderCategoryPosition(${cat.id}, -1)" ${index === 0 ? 'disabled class="text-slate-700 cursor-not-allowed"' : 'class="text-sky-400 hover:text-sky-300"'} title="Przesuń w górę">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"></path></svg>
                                 </button>
@@ -1447,6 +1462,7 @@
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
                             </div>
+                            ` : ''}
 
                             <span class="text-3xl filter drop-shadow">${cat.icone || '📁'}</span>
                             <div>
@@ -1459,6 +1475,7 @@
                         </div>
 
                         <!-- Action controls -->
+                        ${state.appMode === 'MASTER' ? `
                         <div class="flex items-center space-x-1 flex-shrink-0">
                             <button onclick="openCategoryModal('edit', ${cat.id})" class="p-2 text-sky-400 hover:bg-sky-950/40 rounded-xl transition-all border border-transparent hover:border-sky-900/30" title="Edytuj">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
@@ -1467,6 +1484,7 @@
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                             </button>
                         </div>
+                        ` : ''}
                     </div>
                 `;
             });
@@ -1475,6 +1493,7 @@
         }
 
         function reorderCategoryPosition(catId, direction) {
+            if (state.appMode !== "MASTER") return;
             const list = [...state.categories].sort((a,b) => a.position - b.position);
             const idx = list.indexOfFirst(c => c.id === catId);
             if (idx === -1) return;
@@ -1509,6 +1528,10 @@
         };
 
         function deleteCategory(id, categoryName) {
+            if (state.appMode !== "MASTER") {
+                showToast("Brak uprawnień. Tylko administrator może usuwać kategorie.", "error");
+                return;
+            }
             const confirmDel = confirm(translate("delete_category") + ` "${categoryName}"?\n` + translate("delete_product_confirm") + `\n🚨 UWAGA: Wszystkie produkty z tej kategorii zostaną trwale usunięte!`);
             
             if (confirmDel) {
@@ -1537,6 +1560,10 @@
 
         // Dialog Categories popup
         function openCategoryModal(mode = 'add', catId = null) {
+            if (state.appMode !== "MASTER") {
+                showToast("Brak uprawnień. Tylko administrator może dodawać lub edytować kategorie.", "error");
+                return;
+            }
             state.categoryModalMode = mode;
             state.editingCategoryId = catId;
 
@@ -1839,6 +1866,28 @@
                 mMaster.classList.add('border-slate-700', 'text-slate-400', 'bg-transparent');
                 mMaster.classList.remove('border-sky-500', 'text-sky-400', 'bg-sky-950/20');
             }
+
+            // Dynamically show/hide administrator input actions
+            const addProdBtn = document.getElementById("add-product-btn");
+            const resetCatContainer = document.getElementById("reset-catalog-container");
+            const addCatBtn = document.getElementById("add-category-btn");
+            const quickManageCatsBtn = document.getElementById("quick-manage-cats-btn");
+
+            if (state.appMode === "MASTER") {
+                if (addProdBtn) addProdBtn.classList.remove("hidden");
+                if (resetCatContainer) resetCatContainer.classList.remove("hidden");
+                if (addCatBtn) addCatBtn.classList.remove("hidden");
+                if (quickManageCatsBtn) quickManageCatsBtn.classList.remove("hidden");
+            } else {
+                if (addProdBtn) addProdBtn.classList.add("hidden");
+                if (resetCatContainer) resetCatContainer.classList.add("hidden");
+                if (addCatBtn) addCatBtn.classList.add("hidden");
+                if (quickManageCatsBtn) quickManageCatsBtn.classList.add("hidden");
+            }
+
+            // Immediately re-render catalogs to update contextual list button displays
+            renderCatalog();
+            renderCategoriesManager();
         }
 
         function setSyncMode(mode) {

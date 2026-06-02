@@ -719,7 +719,25 @@
             "active_op_mode": { pt: "Modo de Operação Ativo", pl: "Aktywny tryb operacyjny", en: "Active Operating Mode" },
             "diagnostic_console": { pt: "Console de Diagnóstico:", pl: "Konsola diagnostyczna:", en: "Diagnostic Console:" },
             "no_products": { pt: "Nenhum produto cadastrado no catálogo.", pl: "Brak zarejestrowanych produktów w katalogu.", en: "No products in catalog." },
-            "no_products_match": { pt: "Nenhum produto para os filtros selecionados.", pl: "Brak produktów dla wybranych filtrów.", en: "No products match filters." }
+            "no_products_match": { pt: "Nenhum produto para os filtros selecionados.", pl: "Brak produktów dla wybranych filtrów.", en: "No products match filters." },
+            "admin_only_error": { pt: "Acesso negado. Apenas o administrador possui permissão para esta ação.", pl: "Brak uprawnień. Tylko administrator może wykonać tę akcję.", en: "Permission denied. Only the administrator can perform this action." },
+            "category_added": { pt: "Categoria adicionada com sucesso!", pl: "Kategoria pomyślnie dodana!", en: "Category successfully added!" },
+            "product_added": { pt: "Produto adicionado com sucesso!", pl: "Produkt pomyślnie dodany!", en: "Product successfully added!" },
+            "saved_success": { pt: "Salvo com sucesso!", pl: "Zapisano pomyślnie!", en: "Saved successfully!" },
+            "product_deleted": { pt: "Produto excluído!", pl: "Produkt został usunięty!", en: "Product deleted!" },
+            "category_deleted": { pt: "Categoria excluída!", pl: "Kategoria została usunięta!", en: "Category deleted!" },
+            "enter_product_name": { pt: "Por favor, insira o nome do produto!", pl: "Proszę podać nazwę produktu!", en: "Please enter a product name!" },
+            "enter_category_name": { pt: "Por favor, insira o nome da categoria!", pl: "Proszę podać nazwę kategorii!", en: "Please enter a category name!" },
+            "catalog_reset_success": { pt: "Catálogo redefinido com sucesso!", pl: "Katalog został pomyślnie zresetowany!", en: "Catalog reset successfully!" },
+            "position_changed": { pt: "Posição alterada!", pl: "Pozycja zmieniona!", en: "Position changed!" },
+            "manage_categories_info": { pt: "Gerenciar categorias: Adicione ou edite!", pl: "Zarządzaj kategoriami: Dodaj lub edytuj!", en: "Manage categories: Add or edit!" },
+            "sync_success": { pt: "Sincronizado com sucesso!", pl: "Zsynchronizowano pomyślnie!", en: "Synchronized successfully!" },
+            "sync_error": { pt: "Erro ao sincronizar!", pl: "Błąd synchronizacji!", en: "Error during synchronization!" },
+            "saved_cloud": { pt: "Zapisano em nuvem!", pl: "Zapisano w chmurze!", en: "Saved to cloud!" },
+            "fill_api_configs": { pt: "Por favor, configure e salve o link da API primeiro!", pl: "Najpierw skonfiguruj i zapisz link do API!", en: "Please configure and save the API link first!" },
+            "delete_category_warning": { pt: "🚨 ATENÇÃO: Todos os produtos nesta categoria serão permanentemente excluídos!", pl: "🚨 UWAGA: Wszystkie produkty z tej kategorii zostaną trwale usunięte!", en: "🚨 WARNING: All products in this category will be permanently deleted!" },
+            "mode_changed": { pt: "Modo operatório alterado!", pl: "Tryb operacyjny został zmieniony!", en: "Operating mode changed!" },
+            "config_saved": { pt: "Configuração salva com sucesso!", pl: "Konfiguracja została zapisana pomyślnie!", en: "Configuration saved successfully!" }
         };
 
         // ====================================================================
@@ -1300,7 +1318,7 @@
 
         function deleteProduct(productId) {
             if (state.appMode !== "MASTER") {
-                showToast("Brak uprawnień. Tylko administrator może usuwać produkty.", "error");
+                showToast(translate("admin_only_error"), "error");
                 return;
             }
             const product = state.products.find(p => p.id === productId);
@@ -1315,7 +1333,7 @@
                 saveOrdersToLocalStorage();
                 renderCatalog();
                 filterProducts();
-                showToast("Produto excluído / Produkt usunięty", "warning");
+                showToast(translate("product_deleted"), "warning");
                 triggerAutoSyncCloud("products");
             }
         }
@@ -1323,7 +1341,7 @@
         // Add Product Dialog trigger
         function openProductModal(mode = 'add', productId = null) {
             if (state.appMode !== "MASTER") {
-                showToast("Brak uprawnień. Tylko administrator może dodawać lub edytować produkty.", "error");
+                showToast(translate("admin_only_error"), "error");
                 return;
             }
             state.productModalMode = mode;
@@ -1367,7 +1385,7 @@
             const unit = document.getElementById("modal-product-unit").value;
 
             if (!name) {
-                showToast("Por favor insira um nome!", "warning");
+                showToast(translate("enter_product_name"), "warning");
                 return;
             }
 
@@ -1379,7 +1397,7 @@
                     unidade: unit
                 };
                 state.products.push(newProduct);
-                showToast("Adicionado com sucesso!", "success");
+                showToast(translate("product_added"), "success");
             } else {
                 const prodIndex = state.products.findIndex(p => p.id === state.editingProductId);
                 if (prodIndex !== -1) {
@@ -1391,7 +1409,7 @@
                         categoria: category,
                         unidade: unit
                     };
-                    showToast("Salvo com sucesso!", "success");
+                    showToast(translate("saved_success"), "success");
                 }
             }
 
@@ -1404,7 +1422,7 @@
 
         function confirmResetCatalog() {
             if (state.appMode !== "MASTER") {
-                showToast("Brak uprawnień. Tylko administrator może zresetować katalog.", "error");
+                showToast(translate("admin_only_error"), "error");
                 return;
             }
             const userConfirm = confirm(translate("reset_catalog") + "?");
@@ -1420,7 +1438,7 @@
                 renderCatalog();
                 renderCategoriesManager();
                 filterProducts();
-                showToast("Catálogo redefinido com sucesso!", "success");
+                showToast(translate("catalog_reset_success"), "success");
                 triggerAutoSyncCloud("all");
             }
         }
@@ -1494,28 +1512,30 @@
 
         function reorderCategoryPosition(catId, direction) {
             if (state.appMode !== "MASTER") return;
+            // Retrieve sorted array based on accurate position indices
             const list = [...state.categories].sort((a,b) => a.position - b.position);
-            const idx = list.indexOfFirst(c => c.id === catId);
+            const idx = list.findIndex(c => c.id === catId);
             if (idx === -1) return;
 
             const targetIdx = idx + direction;
-            if (targetIdx < 0 || targetIdx >= list.size) return;
+            if (targetIdx < 0 || targetIdx >= list.length) return;
 
-            // Fix position assignments
-            const currentObj = list[idx];
-            const companionObj = list[targetIdx];
+            // Swap objects in temporary list
+            const tempVal = list[idx];
+            list[idx] = list[targetIdx];
+            list[targetIdx] = tempVal;
 
-            // Swap position indices
-            const tempPos = currentObj.position;
-            currentObj.position = companionObj.position;
-            companionObj.position = tempPos;
+            // Normalize positions sequentially from index 0 upwards
+            list.forEach((cat, index) => {
+                cat.position = index;
+            });
 
             state.categories = list;
             saveCategoriesToLocalStorage();
             renderCategoriesManager();
             renderCategoryChips();
             filterProducts();
-            showToast("Mudado de posição!!", "success");
+            showToast(translate("position_changed"), "success");
             triggerAutoSyncCloud("categorias");
         }
 
@@ -1529,10 +1549,10 @@
 
         function deleteCategory(id, categoryName) {
             if (state.appMode !== "MASTER") {
-                showToast("Brak uprawnień. Tylko administrator może usuwać kategorie.", "error");
+                showToast(translate("admin_only_error"), "error");
                 return;
             }
-            const confirmDel = confirm(translate("delete_category") + ` "${categoryName}"?\n` + translate("delete_product_confirm") + `\n🚨 UWAGA: Wszystkie produkty z tej kategorii zostaną trwale usunięte!`);
+            const confirmDel = confirm(translate("delete_category") + ` "${categoryName}"?\n` + translate("delete_product_confirm") + `\n` + translate("delete_category_warning"));
             
             if (confirmDel) {
                 // Remove category
@@ -1553,7 +1573,7 @@
                 renderCategoriesManager();
                 renderCategoryChips();
                 filterProducts();
-                showToast("Excluído com sucesso!", "warning");
+                showToast(translate("category_deleted"), "warning");
                 triggerAutoSyncCloud("all");
             }
         }
@@ -1561,7 +1581,7 @@
         // Dialog Categories popup
         function openCategoryModal(mode = 'add', catId = null) {
             if (state.appMode !== "MASTER") {
-                showToast("Brak uprawnień. Tylko administrator może dodawać lub edytować kategorie.", "error");
+                showToast(translate("admin_only_error"), "error");
                 return;
             }
             state.categoryModalMode = mode;
@@ -1601,7 +1621,7 @@
         function quickManageCategories() {
             closeProductModal();
             switchTab(2);
-            showToast("Zarządzaj kategoriami: Dodaj lub Edytuj!", "info");
+            showToast(translate("manage_categories_info"), "info");
         }
 
         function saveCategoryModal() {
@@ -1610,7 +1630,7 @@
             const color = (document.getElementById("modal-category-color").value || "#0ea5e9").trim();
 
             if (!name) {
-                showToast("Por favor insira um nome de categoria!", "warning");
+                showToast(translate("enter_category_name"), "warning");
                 return;
             }
 
@@ -1624,7 +1644,7 @@
                     position: nextPos
                 };
                 state.categories.push(newCat);
-                showToast("Categoria adicionada!", "success");
+                showToast(translate("category_added"), "success");
             } else {
                 const catIndex = state.categories.findIndex(c => c.id === state.editingCategoryId);
                 if (catIndex !== -1) {
@@ -1651,7 +1671,7 @@
                         cor: color,
                         position: prevCatObj.position
                     };
-                    showToast("Salvo!", "success");
+                    showToast(translate("saved_success"), "success");
                 }
             }
 
@@ -1895,7 +1915,7 @@
             localStorage.setItem("gastro_app_mode", mode);
             updateSyncModeUI();
             terminalLog(`[SETTINGS] Mode of operation set to: ${mode}`);
-            showToast("Modo alterado / Tryb zmieniony", "info");
+            showToast(translate("mode_changed"), "info");
         }
 
         function saveSyncSettings() {
@@ -1908,7 +1928,7 @@
             localStorage.setItem("gastro_gas_url", urlInput);
             localStorage.setItem("gastro_gas_token", tokenInput);
 
-            showToast("Konfiguracja zapisana!", "success");
+            showToast(translate("config_saved"), "success");
             terminalLog(`[SETTINGS] Saved GAS API connection variables. Credentials written to localStorage.`);
 
             if (state.gasApiUrl) {
@@ -1922,7 +1942,7 @@
          */
         function copyPreConfigShareLink() {
             if (!state.gasApiUrl) {
-                showToast("Najpierw skonfiguruj i zapisz API!", "warning");
+                showToast(translate("fill_api_configs"), "warning");
                 return;
             }
 
@@ -1951,7 +1971,7 @@
         // UI trigger for Pull
         function forceCloudPull() {
             if (!state.gasApiUrl) {
-                showToast("Najpierw uzupełnij konfigurację API!", "warning");
+                showToast(translate("fill_api_configs"), "warning");
                 return;
             }
             cloudPullSync(false);
@@ -1960,7 +1980,7 @@
         // UI trigger for Push
         function forceCloudPush() {
             if (!state.gasApiUrl) {
-                showToast("Najpierw uzupełnij konfigurację API!", "warning");
+                showToast(translate("fill_api_configs"), "warning");
                 return;
             }
             cloudPushSync("all", false);
@@ -2111,13 +2131,13 @@
                 setConnectionStateUI("online");
                 terminalLog(`[OK] Cloud-to-Local synchronization completed successfully.`);
                 if (!silent) {
-                    showToast("Sincronizado com sucesso!", "success");
+                    showToast(translate("sync_success"), "success");
                 }
             } catch (err) {
                 setConnectionStateUI("offline");
                 terminalLog(`[ERROR] Cloud download fail! Reason: ${err.message}`);
                 if (!silent) {
-                    showToast("Erro ao sincronizar chmura!", "error");
+                    showToast(translate("sync_error"), "error");
                 }
             } finally {
                 showSyncBanner(false);
@@ -2196,13 +2216,13 @@
                 setConnectionStateUI("online");
                 terminalLog(`[OK] Local-to-Cloud push completed successfully.`);
                 if (!silent) {
-                    showToast("Zapisano w chmurze!", "success");
+                    showToast(translate("saved_cloud"), "success");
                 }
             } catch (err) {
                 setConnectionStateUI("offline");
                 terminalLog(`[ERROR] Push uploading sequence failed! Details: ${err.message}`);
                 if (!silent) {
-                    showToast("Erro ao salvar na nuvem!", "error");
+                    showToast(translate("sync_error"), "error");
                 }
             } finally {
                 showSyncBanner(false);

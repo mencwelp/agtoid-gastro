@@ -167,29 +167,34 @@
             </div>
 
             <!-- Header indicators (online states and mobile language changer) -->
-            <div class="flex items-center space-x-2">
-                <!-- User Profile Label with logout -->
-                <div id="header-user-badge" class="hidden items-center space-x-1.5 px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-[10.5px] text-slate-300">
-                    <span>👤</span>
-                    <span id="header-user-name" class="font-extrabold text-sky-400">Admin</span>
-                    <button onclick="logoutUser()" class="ml-1.5 text-slate-400 hover:text-white transition-all text-xs" title="Wyloguj się">🚪</button>
-                </div>
+            <div class="flex flex-col items-end space-y-1.5">
+    
+    <!-- User Profile Label -->
+    <div id="header-user-badge" class="hidden items-center space-x-1.5 px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-[10.5px] text-slate-300">
+        <span>👤</span>
+        <span id="header-user-name" class="font-extrabold text-sky-400">Admin</span>
+        <button onclick="logoutUser()" class="ml-1.5 text-slate-400 hover:text-white transition-all text-xs" title="Logout">🚪</button>
+    </div>
 
-                <!-- Sync status pills -->
-                <div id="cloud-status-badge" class="flex items-center space-x-1.5 px-2 py-1 rounded bg-slate-800 border border-slate-700 text-[10px] text-slate-400 uppercase tracking-widest leading-none font-bold">
-                    <span class="w-1.5 h-1.5 rounded-full bg-slate-500 inline-block" id="cloud-status-dot"></span>
-                    <span id="cloud-status-text" data-l10n="offline">Offline</span>
-                </div>
+    <!-- Bottom row: Sync status and Language -->
+    <div class="flex items-center space-x-1.5">
+        
+        <!-- Sync status pills -->
+        <div id="cloud-status-badge" class="flex items-center space-x-1.5 px-2 py-1 rounded bg-slate-800 border border-slate-700 text-[10px] text-slate-400 uppercase tracking-widest leading-none font-bold">
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-500 inline-block" id="cloud-status-dot"></span>
+            <span id="cloud-status-text" data-l10n="offline">Offline</span>
+        </div>
 
-                <!-- Language Selector for Mobile -->
-                <div class="md:hidden">
-                    <select onchange="changeLanguage(this.value)" id="lang-select-mobile" class="bg-slate-800 text-xs border border-slate-700/80 rounded px-1.5 py-1 text-sky-400 font-bold">
-                        <option value="pt">PT</option>
-                        <option value="pl">PL</option>
-                        <option value="en">EN</option>
-                    </select>
-                </div>
-            </div>
+        <!-- Language Selector for Mobile -->
+        <div class="md:hidden">
+            <select onchange="changeLanguage(this.value)" id="lang-select-mobile" class="bg-slate-800 text-xs border border-slate-700/80 rounded px-1.5 py-1 text-sky-400 font-bold">
+                <option value="pt">PT</option>
+                <option value="pl">PL</option>
+                <option value="en">EN</option>
+            </select>
+        </div>
+    </div>
+</div>
         </header>
 
         <!-- LIVE NOTIFICATION / SYNC STATE BANNER -->

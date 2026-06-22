@@ -6,7 +6,6 @@
     <title>Compras Gastro - Web App</title>
     
     <!-- PWA Standard Tags -->
-    <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/svg+xml" href="icon.svg">
     <link rel="icon" type="image/png" sizes="192x192" href="icon_192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="icon_512.png">
@@ -169,6 +168,13 @@
 
             <!-- Header indicators (online states and mobile language changer) -->
             <div class="flex items-center space-x-2">
+                <!-- User Profile Label with logout -->
+                <div id="header-user-badge" class="hidden items-center space-x-1.5 px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-[10.5px] text-slate-300">
+                    <span>👤</span>
+                    <span id="header-user-name" class="font-extrabold text-sky-400">Admin</span>
+                    <button onclick="logoutUser()" class="ml-1.5 text-slate-400 hover:text-white transition-all text-xs" title="Wyloguj się">🚪</button>
+                </div>
+
                 <!-- Sync status pills -->
                 <div id="cloud-status-badge" class="flex items-center space-x-1.5 px-2 py-1 rounded bg-slate-800 border border-slate-700 text-[10px] text-slate-400 uppercase tracking-widest leading-none font-bold">
                     <span class="w-1.5 h-1.5 rounded-full bg-slate-500 inline-block" id="cloud-status-dot"></span>
@@ -215,13 +221,16 @@
                     </div>
 
                     <!-- Filter Checkboxes -->
-                    <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-800/60">
-                        <div class="flex items-center space-x-3">
+                    <div class="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-slate-800/60">
+                        <div class="flex flex-wrap items-center gap-2">
                             <button onclick="toggleFilterUrgent()" id="filter-urgent-btn" class="flex items-center space-x-1 px-3 py-1.5 rounded-full border border-slate-700 text-xs font-semibold bg-slate-800/50 hover:bg-slate-850 text-slate-300 transition-all">
                                 <span>🚨</span> <span data-l10n="urgent">Urgente</span>
                             </button>
                             <button onclick="toggleFilterQuantityOnly()" id="filter-qty-btn" class="flex items-center space-x-1 px-3 py-1.5 rounded-full border border-slate-700 text-xs font-semibold bg-slate-800/50 hover:bg-slate-850 text-slate-300 transition-all">
                                 <span>📦</span> <span data-l10n="limiar_filter_label">Limiar/Quantidade</span>
+                            </button>
+                            <button onclick="syncActiveOrderToCloud()" class="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full border border-emerald-700 text-xs font-extrabold bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-300 transition-all shadow shadow-emerald-900/40">
+                                <span>☁️</span> <span data-l10n="sync_active_order">Zapisz / Synchronizuj z GDrive</span>
                             </button>
                         </div>
 
@@ -305,6 +314,36 @@
                     </div>
                 </div>
 
+                <!-- MERGE USER ORDERS COMPONENT -->
+                <div id="merge-orders-panel" class="hidden bg-slate-900 rounded-2xl p-4 border border-slate-800 space-y-4 shadow-xl">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xl">🧩</span>
+                            <div>
+                                <span class="block text-md font-bold text-white uppercase tracking-wider" data-l10n="merge_title">Unifikacja i Łączenie List (Merge)</span>
+                                <span class="text-xs text-slate-400" data-l10n="merge_desc">Połącz listy zakupowe użytkowników na bazie timestampów</span>
+                            </div>
+                        </div>
+                        <button onclick="scanAndLoadCloudUserOrders()" class="p-2 bg-slate-800 hover:bg-slate-700/80 rounded-xl border border-slate-700 text-xs transition-md" title="Odśwież pliki z chmury">
+                            <span data-l10n="refresh_btn">🔄 Odśwież</span>
+                        </button>
+                    </div>
+
+                    <div id="cloud-merge-status" class="text-xs text-slate-400 py-2 italic text-center hidden" data-l10n="searching_order_files">
+                        Wyszukiwanie plików zamówień...
+                    </div>
+
+                    <div id="cloud-user-files-list" class="space-y-2.5 max-h-60 overflow-y-auto pr-1">
+                        <!-- User files with checkboxes injected in JS -->
+                    </div>
+
+                    <div class="pt-2 flex flex-col gap-2">
+                        <button onclick="executeMerge()" id="btn-execute-merge" class="w-full py-2.5 bg-gradient-to-r from-teal-600 to-sky-600 hover:from-teal-500 hover:to-sky-500 text-white font-extrabold rounded-xl shadow-lg transition-all text-sm uppercase tracking-wider" data-l10n="merge_checked_btn">
+                            Połącz zaznaczone zamówienia (Merge)
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Shared exporters grid -->
                 <div class="bg-slate-900 rounded-2xl p-4 border border-slate-800 space-y-3">
                     <h3 class="text-sm font-bold text-slate-300" data-l10n="order_export">Exportar Encomenda</h3>
@@ -354,6 +393,27 @@
             <!-- TAB 4: GDRIVE SYNC (CLOUD SYNCHRONIZER SYSTEM) -->
             <section id="tab-view-4" class="tab-view hidden space-y-4">
                 
+                <!-- USER MANAGEMENT CONFIGURATION (ONLY SHOWN FOR ADMIN/MANAGER) -->
+                <div id="user-management-panel" class="hidden bg-slate-900 rounded-2xl p-4 border border-slate-800 space-y-4 shadow-xl">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xl">👥</span>
+                            <div>
+                                <span class="block text-sm font-bold text-white uppercase tracking-wider" data-l10n="user_management_panel_title">Zarządzanie Użytkownikami</span>
+                                <span class="text-xs text-slate-400 font-medium" data-l10n="user_management_panel_desc">Twórz, edytuj i usuwaj profile pracowników</span>
+                            </div>
+                        </div>
+                        <button onclick="openUserModal('add')" class="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1 shadow">
+                            <span data-l10n="add_button_text">➕ Dodaj</span>
+                        </button>
+                    </div>
+
+                    <!-- List of users -->
+                    <div id="users-list-container" class="space-y-2">
+                        <!-- Injected in JS -->
+                    </div>
+                </div>
+
                 <div class="bg-slate-900 rounded-2xl p-4 border border-slate-800 space-y-4 shadow-xl">
                     <div class="flex items-center space-x-2 pb-2 border-b border-slate-800">
                         <span class="text-xl">☁️</span>
@@ -611,6 +671,66 @@
         </div>
     </div>
 
+    <!-- MODAL: ADD / EDIT USER -->
+    <div id="user-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[10000]">
+        <div class="bg-slate-900 rounded-2xl border border-slate-800 w-full max-w-sm overflow-hidden transform scale-95 transition-all shadow-2xl p-5 space-y-4">
+            <h3 id="user-modal-title" class="text-md font-extrabold uppercase tracking-wide text-white" data-l10n="add_user_title">Dodaj użytkownika</h3>
+            
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-[10px] text-slate-400 font-extrabold uppercase mb-1" data-l10n="user_username_label">Nazwa Użytkownika</label>
+                    <input type="text" id="modal-user-username" class="w-full bg-slate-850 border border-slate-700/60 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-sky-500">
+                </div>
+                <div>
+                    <label class="block text-[10px] text-slate-400 font-extrabold uppercase mb-1" data-l10n="login_password_pin">Hasło / PIN (Opcjonalnie)</label>
+                    <input type="password" id="modal-user-password" placeholder="Brak hasła..." data-l10n-placeholder="user_no_password_placeholder" class="w-full bg-slate-850 border border-slate-700/60 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-sky-500">
+                </div>
+                <div>
+                    <label class="block text-[10px] text-slate-400 font-extrabold uppercase mb-1" data-l10n="user_profile_role_label">Profil / Rola</label>
+                    <select id="modal-user-role" class="w-full bg-slate-850 border border-slate-700/60 rounded-xl px-3.5 py-2 text-sm text-sky-400 focus:outline-none focus:border-sky-500 font-bold">
+                        <option value="user" data-l10n="role_option_user">👷 Pracownik (user)</option>
+                        <option value="manager" data-l10n="role_option_manager">💼 Kierownik (manager)</option>
+                        <option value="admin" data-l10n="role_option_admin">👑 Administrator (admin)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2 pt-2 justify-end">
+                <button onclick="closeUserModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-extrabold text-xs rounded-xl border border-slate-700 transition-all" data-l10n="cancel">Anuluj</button>
+                <button onclick="saveUserModal()" class="px-5 py-2 bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-xs rounded-xl shadow transition-all" data-l10n="save">Zapisz</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIN SCREEN OVERLAY -->
+    <div id="login-screen" class="fixed inset-0 bg-slate-950 flex flex-col items-center justify-center p-4 z-[9999] transition-all duration-350">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 space-y-6 shadow-2xl text-center">
+            <div class="flex flex-col items-center">
+                <span class="text-6xl mb-3 animate-bounce">🥬</span>
+                <span class="text-2xl font-black text-sky-400 font-bold tracking-tight">Compras Gastro</span>
+                <span class="text-xs text-slate-400 mt-1 uppercase tracking-widest font-bold" data-l10n="login_system_title">System Logowania</span>
+            </div>
+            
+            <div class="space-y-4 text-left">
+                <div>
+                    <label class="block text-xs text-slate-400 uppercase font-black tracking-wider mb-2" data-l10n="login_user_profile">Profil użytkownika:</label>
+                    <select id="login-user-select" class="w-full bg-slate-850 text-white border-2 border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-sky-500 font-bold">
+                        <!-- Options injected in JS -->
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 uppercase font-black tracking-wider mb-2" data-l10n="login_password_pin">Hasło / PIN (Opcjonalnie):</label>
+                    <input type="password" id="login-password-input" placeholder="Wpisz hasło..." data-l10n-placeholder="login_password_placeholder" class="w-full bg-slate-850 text-white border-2 border-slate-800/80 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-sky-500 font-bold">
+                </div>
+            </div>
+
+            <button onclick="loginUser()" class="w-full py-3.5 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-extrabold rounded-xl shadow-lg transform active:scale-95 transition-all text-sm uppercase tracking-widest" data-l10n="login_button">
+                Zaloguj się
+            </button>
+            <div class="text-[10px] text-slate-600 font-mono">Agtoid Gastro Security System v1.1</div>
+        </div>
+    </div>
+
     <!-- CUSTOM TOASTS SYSTEM -->
     <div id="toast-container" class="fixed top-5 left-1/2 -translate-x-1/2 flex flex-col space-y-2 z-50 pointer-events-none max-w-sm w-full font-bold px-4">
         <!-- Toast elements dynamically injected -->
@@ -678,7 +798,7 @@
             "delete": { pt: "Excluir", pl: "Usuń", en: "Delete" },
             "search_placeholder": { pt: "Pesquisar produto...", pl: "Szukaj produktu...", en: "Search product..." },
             "limiar_filter_label": { pt: "Com Quantidade", pl: "Tylko wybrane", en: "With quantity" },
-            "limpiar_label": { pt: "Wyczyść", pl: "Wyczyść", en: "Clear" },
+            "limpiar_label": { pt: "Limpar", pl: "Wyczyść", en: "Clear" },
             "tab_encomendas": { pt: "Encomenda", pl: "Zamówienia", en: "Orders" },
             "tab_catalogo": { pt: "Catálogo", pl: "Katalog", en: "Catalog" },
             "tab_categorias": { pt: "Categorias", pl: "Kategorie", en: "Categories" },
@@ -737,7 +857,53 @@
             "fill_api_configs": { pt: "Por favor, configure e salve o link da API primeiro!", pl: "Najpierw skonfiguruj i zapisz link do API!", en: "Please configure and save the API link first!" },
             "delete_category_warning": { pt: "🚨 ATENÇÃO: Todos os produtos nesta categoria serão permanentemente excluídos!", pl: "🚨 UWAGA: Wszystkie produkty z tej kategorii zostaną trwale usunięte!", en: "🚨 WARNING: All products in this category will be permanently deleted!" },
             "mode_changed": { pt: "Modo operatório alterado!", pl: "Tryb operacyjny został zmieniony!", en: "Operating mode changed!" },
-            "config_saved": { pt: "Configuração salva com sucesso!", pl: "Konfiguracja została zapisana pomyślnie!", en: "Configuration saved successfully!" }
+            "config_saved": { pt: "Configuração salva com sucesso!", pl: "Konfiguracja została zapisana pomyślnie!", en: "Configuration saved successfully!" },
+            "confirm_clear_order": { pt: "Deseja realmente limpar todo o carrinho de compras atual?", pl: "Czy na pewno chcesz wyczyścić cały koszyk zakupowy?", en: "Are you sure you want to clear the entire shopping cart?" },
+            "confirm_reset_catalog": { pt: "Isso irá redefinir o catálogo para as configurações originais e excluir todas as personalizações. Confirmar?", pl: "Spowoduje to przywrócenie katalogu do ustawień pierwotnych i usunięcie wszystkich zmian. Czy chcesz kontynuować?", en: "This will reset the catalog to native settings and erase custom changes. Continue?" },
+            "confirm_delete_after_merge": { pt: "Deseja APAGAR as encomendas integradas dos funcionários do servidor Google Drive após o merge?", pl: "Czy po pomyślnym połączeniu (Merge) chcesz USUNĄĆ pliki zamówień tych pracowników z chmury?", en: "Do you want to DELETE employee order files from Google Drive after a successful merge?" },
+            "sync_active_order": { pt: "Salvar / Syncronizar (GDrive)", pl: "Zapisz / Synchronizuj z GDrive", en: "Save / Sync with GDrive" },
+            "login_system_title": { pt: "Sistema de Autenticação", pl: "System Logowania", en: "Login System" },
+            "login_user_profile": { pt: "Perfil de utilizador:", pl: "Profil użytkownika:", en: "User profile:" },
+            "login_password_pin": { pt: "Palavra-passe / PIN (Opcional):", pl: "Hasło / PIN (Opcjonalnie):", en: "Password / PIN (Optional):" },
+            "login_password_placeholder": { pt: "Digite a palavra-passe...", pl: "Wpisz hasło...", en: "Enter password..." },
+            "login_button": { pt: "Entrar", pl: "Zaloguj się", en: "Login" },
+            "add_user_title": { pt: "Adicionar utilizador", pl: "Dodaj użytkownika", en: "Add User" },
+            "edit_user": { pt: "Editar utilizador", pl: "Edytuj użytkownika", en: "Edit User" },
+            "user_username_label": { pt: "Nome de Utilizador", pl: "Nazwa użytkownika", en: "Username" },
+            "user_no_password_placeholder": { pt: "Sem palavra-passe...", pl: "Brak hasła...", en: "No password..." },
+            "user_profile_role_label": { pt: "Perfil / Função", pl: "Profil / Rola", en: "Profile / Role" },
+            "role_option_user": { pt: "👷 Funcionário (user)", pl: "👷 Pracownik (user)", en: "👷 Employee (user)" },
+            "role_option_manager": { pt: "💼 Gestor (manager)", pl: "💼 Kierownik (manager)", en: "💼 Manager (manager)" },
+            "role_option_admin": { pt: "👑 Administrador (admin)", pl: "👑 Administrator (admin)", en: "👑 Administrator (admin)" },
+            "user_management_panel_title": { pt: "Gestão de Utilizadores", pl: "Zarządzanie użytkownikami", en: "User Management" },
+            "user_management_panel_desc": { pt: "Crie, edite e elimine perfis de funcionários", pl: "Twórz, edytuj i usuwaj profile pracowników", en: "Create, edit, and delete employee profiles" },
+            "add_button_text": { pt: "➕ Adicionar", pl: "➕ Dodaj", en: "➕ Add" },
+            "no_registered_users": { pt: "Nenhum utilizador registado.", pl: "Brak zarejestrowanych użytkowników.", en: "No registered users." },
+            "user_password_set": { pt: "🔑 Palavra-passe configurada", pl: "🔑 Hasło ustawione", en: "🔑 Password set" },
+            "user_no_password": { pt: "🔓 Sem palavra-passe", pl: "🔓 Brak hasła", en: "🔓 No password" },
+            "merge_title": { pt: "Unificação e Fusão de Encomendas (Merge)", pl: "Unifikacja i Łączenie List (Merge)", en: "Unify and Merge Lists (Merge)" },
+            "merge_desc": { pt: "Combine as listas de compras dos utilizadores com base nos timestamps", pl: "Połącz listy zakupowe użytkowników na bazie timestampów", en: "Merge user shopping lists based on timestamps" },
+            "refresh_btn": { pt: "🔄 Atualizar", pl: "🔄 Odśwież", en: "🔄 Refresh" },
+            "searching_order_files": { pt: "A pesquisar ficheiros de encomenda...", pl: "Wyszukiwanie plików zamówień...", en: "Searching for order files..." },
+            "merge_checked_btn": { pt: "Fundir encomendas selecionadas (Merge)", pl: "Połącz zaznaczone zamówienia (Merge)", en: "Merge Selected Orders" },
+            "no_other_active_orders_cloud": { pt: "Nenhum outro pedido ativo na nuvem.", pl: "Brak innych aktywnych zamówień w chmurze.", en: "No other active orders found in the cloud." },
+            "uploaded_tag": { pt: "Enviado", pl: "Przesłano", en: "Uploaded" },
+            "ready_status_tag": { pt: "Pronto", pl: "Gotowe", en: "Ready" },
+            "delete_order_cloud_tooltip": { pt: "Excluir de nuvem", pl: "Usuń z chmury", en: "Delete from cloud" },
+            "confirm_delete_cloud_order_file": { pt: "Tem a certeza que deseja eliminar o ficheiro do utilizador {username} da nuvem?", pl: "Czy na pewno chcesz usunąć z chmury plik zamówienia użytkownika: {username}?", en: "Are you sure you want to delete the user's cloud order file: {username}?" },
+            "select_at_least_one_order": { pt: "Selecione pelo menos uma encomenda para fundir!", pl: "Zaznacz co najmniej jedno zamówienie do połączenia!", en: "Select at least one order to merge!" },
+            "merged_orders_count": { pt: "Fundidas {count} encomendas com sucesso!", pl: "Połączono {count} zamówień!", en: "Merged {count} orders successfully!" },
+            "confirm_delete_user": { pt: "Tem a certeza que deseja eliminar o utilizador \"{username}\"?", pl: "Czy na pewno chcesz usunąć użytkownika \"{username}\"?", en: "Are you sure you want to delete user \"{username}\"?" },
+            "user_updated": { pt: "Utilizador atualizado com sucesso!", pl: "Użytkownik zaktualizowany!", en: "User updated successfully!" },
+            "user_created": { pt: "Novo utilizador adicionado!", pl: "Dodano nowego użytkownika!", en: "New user added!" },
+            "user_deleted_toast": { pt: "Utilizador eliminado.", pl: "Użytkownik usunięty.", en: "User deleted." },
+            "invalid_user": { pt: "Utilizador inválido!", pl: "Nieprawidłowy użytkownik!", en: "Invalid user!" },
+            "invalid_password": { pt: "Palavra-passe inválida!", pl: "Nieprawidłowe hasło użytkownika!", en: "Invalid password!" },
+            "welcome_back_toast": { pt: "Bem-vindo, {username}!", pl: "Witaj, {username}!", en: "Welcome, {username}!" },
+            "logged_out_toast": { pt: "Sessão terminada.", pl: "Wylogowano pomyślnie.", en: "Logged out successfully." },
+            "enter_username": { pt: "Por favor, introduza o nome de utilizador!", pl: "Wprowadź nazwę użytkownika!", en: "Please enter a username!" },
+            "checking": { pt: "A verificar", pl: "Sprawdzanie", en: "Checking" },
+            "items_count_tag": { pt: "{count} itens", pl: "{count} pozycji", en: "{count} items" }
         };
 
         // ====================================================================
@@ -751,7 +917,7 @@
             // Database models
             categories: [],
             products: [],
-            orders: {}, // productId -> { quantidade: 1.5, prioridade: "Normal"/"Urgente" }
+            orders: {}, // productId -> { quantidade: 1.5, prioridade: "Normal"/"Urgente", timestamp: Date.now() }
 
             // Filter sets
             activeCategory: "all",
@@ -768,18 +934,34 @@
             productModalMode: "add", // add | edit
             editingProductId: null,
             categoryModalMode: "add", // add | edit
-            editingCategoryId: null
+            editingCategoryId: null,
+
+            // User states
+            users: [],
+            currentUser: null,
+            userModalMode: "add", // add | edit
+            editingUserId: null,
+            cloudUserFiles: [] // list of files found in cloud for merging
         };
 
         // ====================================================================
         // STARTUP INITIALIZATION
         // ====================================================================
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
             loadStateFromLocalStorage();
             parseQueryParamsConfig();
             
             // Setup static event binds
             applyTranslations();
+            
+            // Load user list from cloud first if api exists, to keep synced!
+            if (state.gasApiUrl) {
+                await pullUsersListFromCloud().catch(e => {});
+            }
+
+            // Verify login overlay status
+            checkUserLoginState();
+            
             renderCategoryChips();
             filterProducts();
             renderCatalog();
@@ -788,8 +970,8 @@
             updateTabNavigationStates();
 
             // Auto pull from chmura on first load if configured (token is optional)
-            if (state.gasApiUrl) {
-                terminalLog(`[STARTUP] Configured Apps Script endpoint detected. Commencing auto-pull...`);
+            if (state.gasApiUrl && state.currentUser) {
+                terminalLog(`[STARTUP] Configured Apps Script endpoint detected. Commencing auto-pull for ${state.currentUser.username}...`);
                 cloudPullSync(true); // silent auto sync
             }
         });
@@ -818,8 +1000,42 @@
                 saveProductsToLocalStorage();
             }
 
-            // Orders
-            const storedOrders = localStorage.getItem("gastro_orders");
+            // Users list
+            const storedUsers = localStorage.getItem("gastro_users");
+            if (storedUsers) {
+                try {
+                    state.users = JSON.parse(storedUsers);
+                    if (!Array.isArray(state.users) || state.users.length === 0) {
+                        throw new Error("Empty user list");
+                    }
+                } catch (e) {
+                    state.users = [
+                        { id: 1, username: "Admin", role: "admin", password: "admin" },
+                        { id: 2, username: "Manager", role: "manager", password: "manager" },
+                        { id: 3, username: "Pracownik 1", role: "user", password: "1234" }
+                    ];
+                    localStorage.setItem("gastro_users", JSON.stringify(state.users));
+                }
+            } else {
+                state.users = [
+                    { id: 1, username: "Admin", role: "admin", password: "admin" },
+                    { id: 2, username: "Manager", role: "manager", password: "manager" },
+                    { id: 3, username: "Pracownik 1", role: "user", password: "1234" }
+                ];
+                localStorage.setItem("gastro_users", JSON.stringify(state.users));
+            }
+
+            // Currently logged in user
+            const storedCurrentUser = localStorage.getItem("gastro_current_user");
+            if (storedCurrentUser) {
+                state.currentUser = JSON.parse(storedCurrentUser);
+            } else {
+                state.currentUser = null;
+            }
+
+            // Orders (isolated per user!)
+            const userKey = state.currentUser ? "gastro_orders_" + state.currentUser.username : "gastro_orders";
+            const storedOrders = localStorage.getItem(userKey);
             if (storedOrders) {
                 state.orders = JSON.parse(storedOrders);
             } else {
@@ -879,7 +1095,8 @@
             localStorage.setItem("gastro_products", JSON.stringify(state.products));
         }
         function saveOrdersToLocalStorage() {
-            localStorage.setItem("gastro_orders", JSON.stringify(state.orders));
+            const userKey = state.currentUser ? "gastro_orders_" + state.currentUser.username : "gastro_orders";
+            localStorage.setItem(userKey, JSON.stringify(state.orders));
         }
 
         // ====================================================================
@@ -1168,7 +1385,7 @@
             const product = state.products.find(p => p.id === productId);
             if (!product) return;
 
-            const current = state.orders[productId] || { quantidade: 0, prioridade: "Normal" };
+            const current = state.orders[productId] || { quantidade: 0, prioridade: "Normal", timestamp: Date.now() };
             const newQty = Math.max(0.0, current.quantidade + delta);
 
             if (newQty <= 0) {
@@ -1176,7 +1393,8 @@
             } else {
                 state.orders[productId] = {
                     quantidade: parseFloat(newQty.toFixed(2)),
-                    prioridade: current.prioridade
+                    prioridade: current.prioridade,
+                    timestamp: current.timestamp || Date.now()
                 };
             }
             saveOrdersToLocalStorage();
@@ -1186,14 +1404,15 @@
 
         function setQtyDirect(productId, valStr) {
             const qty = parseFloat(valStr) || 0.0;
-            const current = state.orders[productId] || { quantidade: 0, prioridade: "Normal" };
+            const current = state.orders[productId] || { quantidade: 0, prioridade: "Normal", timestamp: Date.now() };
 
             if (qty <= 0) {
                 delete state.orders[productId];
             } else {
                 state.orders[productId] = {
                     quantidade: parseFloat(qty.toFixed(2)),
-                    prioridade: current.prioridade
+                    prioridade: current.prioridade,
+                    timestamp: current.timestamp || Date.now()
                 };
             }
 
@@ -1203,13 +1422,14 @@
         }
 
         function toggleProductUrgency(productId) {
-            const current = state.orders[productId] || { quantidade: 0, prioridade: "Normal" };
+            const current = state.orders[productId] || { quantidade: 0, prioridade: "Normal", timestamp: Date.now() };
             const newPriority = current.prioridade === "Urgente" ? "Normal" : "Urgente";
 
             // If quantity doesn't exist yet, we seed with 0.0 to hold priority state
             state.orders[productId] = {
                 quantidade: current.quantidade,
-                prioridade: newPriority
+                prioridade: newPriority,
+                timestamp: current.timestamp || Date.now()
             };
 
             saveOrdersToLocalStorage();
@@ -1218,7 +1438,7 @@
         }
 
         function confirmClearActiveOrder() {
-            const userConfirm = confirm(translate("no_orders") + "\n\n" + translate("clear_active_order") + "?");
+            const userConfirm = confirm(translate("confirm_clear_order"));
             if (userConfirm) {
                 state.orders = {};
                 saveOrdersToLocalStorage();
@@ -1299,7 +1519,7 @@
                         </div>
 
                         <!-- CRUD row actions -->
-                        ${state.appMode === 'MASTER' ? `
+                        ${hasWritePrivileges() ? `
                         <div class="flex items-center space-x-1 flex-shrink-0">
                             <button onclick="openProductModal('edit', ${prod.id})" class="p-2 text-sky-400 hover:bg-sky-950/40 rounded-xl transition-all border border-transparent hover:border-sky-900/30" title="Edytuj">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
@@ -1317,7 +1537,7 @@
         }
 
         function deleteProduct(productId) {
-            if (state.appMode !== "MASTER") {
+            if (!hasWritePrivileges()) {
                 showToast(translate("admin_only_error"), "error");
                 return;
             }
@@ -1340,7 +1560,7 @@
 
         // Add Product Dialog trigger
         function openProductModal(mode = 'add', productId = null) {
-            if (state.appMode !== "MASTER") {
+            if (!hasWritePrivileges()) {
                 showToast(translate("admin_only_error"), "error");
                 return;
             }
@@ -1425,7 +1645,7 @@
                 showToast(translate("admin_only_error"), "error");
                 return;
             }
-            const userConfirm = confirm(translate("reset_catalog") + "?");
+            const userConfirm = confirm(translate("confirm_reset_catalog"));
             if (userConfirm) {
                 state.categories = [...DEFAULT_CATEGORIES];
                 state.products = [...DEFAULT_PRODUCTS];
@@ -1471,7 +1691,7 @@
                     <div class="bg-gradient-to-r from-slate-900 to-slate-850 p-3.5 rounded-2xl border border-slate-800 shadow-md flex items-center justify-between gap-3 hover:border-slate-700/60 transition-all">
                         <div class="flex items-center space-x-3.5">
                             <!-- Drag Sorting positions -->
-                            ${state.appMode === 'MASTER' ? `
+                            ${hasWritePrivileges() ? `
                             <div class="flex flex-col space-y-0.5 mr-1">
                                 <button onclick="reorderCategoryPosition(${cat.id}, -1)" ${index === 0 ? 'disabled class="text-slate-700 cursor-not-allowed"' : 'class="text-sky-400 hover:text-sky-300"'} title="Przesuń w górę">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"></path></svg>
@@ -1493,7 +1713,7 @@
                         </div>
 
                         <!-- Action controls -->
-                        ${state.appMode === 'MASTER' ? `
+                        ${hasWritePrivileges() ? `
                         <div class="flex items-center space-x-1 flex-shrink-0">
                             <button onclick="openCategoryModal('edit', ${cat.id})" class="p-2 text-sky-400 hover:bg-sky-950/40 rounded-xl transition-all border border-transparent hover:border-sky-900/30" title="Edytuj">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
@@ -1511,7 +1731,7 @@
         }
 
         function reorderCategoryPosition(catId, direction) {
-            if (state.appMode !== "MASTER") return;
+            if (!hasWritePrivileges()) return;
             // Retrieve sorted array based on accurate position indices
             const list = [...state.categories].sort((a,b) => a.position - b.position);
             const idx = list.findIndex(c => c.id === catId);
@@ -1548,7 +1768,7 @@
         };
 
         function deleteCategory(id, categoryName) {
-            if (state.appMode !== "MASTER") {
+            if (!hasWritePrivileges()) {
                 showToast(translate("admin_only_error"), "error");
                 return;
             }
@@ -1580,7 +1800,7 @@
 
         // Dialog Categories popup
         function openCategoryModal(mode = 'add', catId = null) {
-            if (state.appMode !== "MASTER") {
+            if (!hasWritePrivileges()) {
                 showToast(translate("admin_only_error"), "error");
                 return;
             }
@@ -1872,37 +2092,28 @@
         // TAB 4: GDRIVE SYNCHRONIZER ENGINE (GAS WEB APP PROXY INTEGRATION)
         // ====================================================================
         function updateSyncModeUI() {
-            const mMaster = document.getElementById("sync-mode-master");
-            const mUser = document.getElementById("sync-mode-user");
-
-            if (state.appMode === "MASTER") {
-                mMaster.classList.add('border-sky-500', 'text-sky-400', 'bg-sky-950/20');
-                mMaster.classList.remove('border-slate-700', 'text-slate-400', 'bg-transparent');
-                mUser.classList.add('border-slate-700', 'text-slate-400', 'bg-transparent');
-                mUser.classList.remove('border-sky-500', 'text-sky-400', 'bg-sky-950/20');
-            } else {
-                mUser.classList.add('border-sky-500', 'text-sky-400', 'bg-sky-950/20');
-                mUser.classList.remove('border-slate-700', 'text-slate-400', 'bg-transparent');
-                mMaster.classList.add('border-slate-700', 'text-slate-400', 'bg-transparent');
-                mMaster.classList.remove('border-sky-500', 'text-sky-400', 'bg-sky-950/20');
-            }
-
             // Dynamically show/hide administrator input actions
             const addProdBtn = document.getElementById("add-product-btn");
             const resetCatContainer = document.getElementById("reset-catalog-container");
             const addCatBtn = document.getElementById("add-category-btn");
             const quickManageCatsBtn = document.getElementById("quick-manage-cats-btn");
+            const userMgmtPanel = document.getElementById("user-management-panel");
+            const mergeOrdersPanel = document.getElementById("merge-orders-panel");
 
-            if (state.appMode === "MASTER") {
+            if (hasWritePrivileges()) {
                 if (addProdBtn) addProdBtn.classList.remove("hidden");
                 if (resetCatContainer) resetCatContainer.classList.remove("hidden");
                 if (addCatBtn) addCatBtn.classList.remove("hidden");
                 if (quickManageCatsBtn) quickManageCatsBtn.classList.remove("hidden");
+                if (userMgmtPanel) userMgmtPanel.classList.remove("hidden");
+                if (mergeOrdersPanel) mergeOrdersPanel.classList.remove("hidden");
             } else {
                 if (addProdBtn) addProdBtn.classList.add("hidden");
                 if (resetCatContainer) resetCatContainer.classList.add("hidden");
                 if (addCatBtn) addCatBtn.classList.add("hidden");
                 if (quickManageCatsBtn) quickManageCatsBtn.classList.add("hidden");
+                if (userMgmtPanel) userMgmtPanel.classList.add("hidden");
+                if (mergeOrdersPanel) mergeOrdersPanel.classList.add("hidden");
             }
 
             // Immediately re-render catalogs to update contextual list button displays
@@ -1992,7 +2203,7 @@
         async function callGasProxyAPI(action, fileName, bodyContent = null) {
             let url = `${state.gasApiUrl}?action=${action}&token=${encodeURIComponent(state.gasSecurityToken)}`;
             if (fileName) {
-                url += `&fileName=${fileName}`;
+                url += `&fileName=${encodeURIComponent(fileName)}`;
             }
 
             const options = {
@@ -2031,6 +2242,11 @@
             }
         }
 
+        function hasWritePrivileges() {
+            if (!state.currentUser) return false;
+            return state.currentUser.role === "admin" || state.currentUser.role === "manager";
+        }
+
         /**
          * Cloud Pull Sync Logic
          */
@@ -2052,7 +2268,7 @@
                         terminalLog(`[WARN] Produtos download skipped or file missing: ${e.message}`);
                         return null;
                     }),
-                    callGasProxyAPI("download", "pedido.json").catch(e => {
+                    callGasProxyAPI("download", state.currentUser ? state.currentUser.username + "/pedido.json" : "pedido.json").catch(e => {
                         terminalLog(`[WARN] Pedido download skipped or file missing: ${e.message}`);
                         return null;
                     })
@@ -2060,7 +2276,7 @@
 
                 let itemsUpdated = false;
 
-                // 1. Process categories (Skip in USER mode to protect admin config if preferred? Or pull inside all modes so worker has category indices)
+                // 1. Process categories
                 if (catsRep && Array.isArray(catsRep)) {
                     state.categories = catsRep;
                     saveCategoriesToLocalStorage();
@@ -2087,7 +2303,6 @@
                 }
 
                 // 3. Process Live orders
-                // In Master and User mode, we overwrite local order state with live active ordres.
                 if (ordersRep) {
                     let parsedOrders = null;
                     if (Array.isArray(ordersRep)) {
@@ -2102,7 +2317,8 @@
                             if (it.id) {
                                 newOrdersObj[it.id] = {
                                     quantidade: it.quantidade || 0,
-                                    prioridade: it.prioridade || "Normal"
+                                    prioridade: it.prioridade || "Normal",
+                                    timestamp: it.timestamp || Date.now()
                                 };
                             }
                         });
@@ -2113,8 +2329,8 @@
                     }
                 }
 
-                // Empty state folder checks
-                if (!catsRep && !prodsRep && state.appMode === "MASTER") {
+                // Empty state folder checks (only for admin/manager)
+                if (!catsRep && !prodsRep && hasWritePrivileges()) {
                     terminalLog(`[WARN] Cloud directory appears empty. Uploading default setup values...`);
                     await cloudPushSync("all", true);
                 }
@@ -2148,10 +2364,9 @@
          * Cloud Push Sync Logic
          */
         async function cloudPushSync(scope = "all", silent = false) {
-            // USER MODES SECURITY RESTRICTION: Employees can ONLY push orders (pedido.json)! 
-            // They cannot overwrite catalog structure (categorias or produtos files).
-            if (state.appMode === "USER" && scope !== "pedido") {
-                terminalLog(`[SECURITY] USER mode active. Push block skipped for scope: "${scope}". User devices are forbidden from altering catalogs.`);
+            // Write privileges guard for non-user scoop uploads
+            if (!hasWritePrivileges() && scope !== "pedido") {
+                terminalLog(`[SECURITY] Employee role active. Push block skipped for scope: "${scope}". Workers are forbidden from altering catalogs.`);
                 return;
             }
 
@@ -2164,12 +2379,12 @@
             try {
                 // 1. Upload Categories
                 if (scope === "all" || scope === "categorias") {
-                    // Map categories to matches JSON API representation exactly
                     const payload = state.categories.map(c => ({
                         id: c.id,
                         nome: c.nome,
                         cor: c.cor,
-                        icone: c.icone
+                        icone: c.icone,
+                        position: c.position
                     }));
                     terminalLog(`[UPLOAD] Uploading file "categorias.json"...`);
                     const result = await callGasProxyAPI("upload", "categorias.json", JSON.stringify(payload));
@@ -2202,15 +2417,17 @@
                                     categoria: p.categoria,
                                     unidade: p.unidade,
                                     quantidade: ord.quantidade,
-                                    prioridade: ord.prioridade
+                                    prioridade: ord.prioridade,
+                                    timestamp: ord.timestamp || Date.now()
                                 });
                             }
                         }
                     });
 
-                    terminalLog(`[UPLOAD] Uploading active orders array "pedido.json" (${payload.length} positions)...`);
-                    const result = await callGasProxyAPI("upload", "pedido.json", JSON.stringify(payload));
-                    terminalLog(`[UPLOAD-OK] pedido.json: ${result.message || 'Updated success.'}`);
+                    const filename = state.currentUser ? state.currentUser.username + "/pedido.json" : "pedido.json";
+                    terminalLog(`[UPLOAD] Uploading active orders array "${filename}" (${payload.length} positions)...`);
+                    const result = await callGasProxyAPI("upload", filename, JSON.stringify(payload));
+                    terminalLog(`[UPLOAD-OK] ${filename}: ${result.message || 'Updated success.'}`);
                 }
 
                 setConnectionStateUI("online");
@@ -2226,6 +2443,592 @@
                 }
             } finally {
                 showSyncBanner(false);
+            }
+        }
+
+        async function syncActiveOrderToCloud() {
+            if (!state.gasApiUrl) {
+                showToast(translate("fill_api_configs"), "warning");
+                return;
+            }
+            await cloudPushSync("pedido", false);
+        }
+
+        // ====================================================================
+        // USER MANAGEMENT & SECURITY SYSTEM
+        // ====================================================================
+        function checkUserLoginState() {
+            const loginOverlay = document.getElementById("login-screen");
+            if (!loginOverlay) return;
+
+            if (!state.currentUser) {
+                loginOverlay.classList.remove("hidden");
+                renderLoginUserSelect();
+            } else {
+                loginOverlay.classList.add("hidden");
+                
+                // Show user badge
+                const badge = document.getElementById("header-user-badge");
+                const nameSpan = document.getElementById("header-user-name");
+                if (badge && nameSpan) {
+                    badge.classList.remove("hidden");
+                    badge.classList.add("flex");
+                    nameSpan.innerText = state.currentUser.username + " (" + state.currentUser.role.toUpperCase() + ")";
+                }
+
+                // Sync appMode with roles
+                if (hasWritePrivileges()) {
+                    state.appMode = "MASTER";
+                } else {
+                    state.appMode = "USER";
+                }
+                localStorage.setItem("gastro_app_mode", state.appMode);
+
+                // Load orders for this specific user
+                const userKey = "gastro_orders_" + state.currentUser.username;
+                const storedOrders = localStorage.getItem(userKey);
+                if (storedOrders) {
+                    state.orders = JSON.parse(storedOrders);
+                } else {
+                    state.orders = {};
+                }
+
+                // Refresh UI
+                updateSyncModeUI();
+                filterProducts();
+                renderCatalog();
+                renderUsersList();
+            }
+        }
+
+        function renderLoginUserSelect() {
+            const select = document.getElementById("login-user-select");
+            if (!select) return;
+
+            select.innerHTML = "";
+            const lastUserId = localStorage.getItem("gastro_last_user_id");
+
+            state.users.forEach(user => {
+                const opt = document.createElement("option");
+                opt.value = user.id;
+                let roleEmoji = "👷";
+                if (user.role === "admin") roleEmoji = "👑";
+                if (user.role === "manager") roleEmoji = "💼";
+                opt.innerText = `${roleEmoji} ${user.username} (${user.role})`;
+                
+                if (lastUserId && parseInt(lastUserId) === user.id) {
+                    opt.selected = true;
+                }
+                select.appendChild(opt);
+            });
+        }
+
+        function loginUser() {
+            const select = document.getElementById("login-user-select");
+            const passwordInput = document.getElementById("login-password-input");
+            if (!select) return;
+
+            const userId = parseInt(select.value);
+            const user = state.users.find(u => u.id === userId);
+            if (!user) {
+                showToast(translate("invalid_user"), "error");
+                return;
+            }
+
+            const enteredPassword = passwordInput ? passwordInput.value.trim() : "";
+            const correctPassword = user.password || "";
+
+            // Jeśli użytkownik ma zdefiniowane hasło, zweryfikuj je
+            if (correctPassword !== "" && enteredPassword !== correctPassword) {
+                showToast(translate("invalid_password"), "error");
+                return;
+            }
+
+            state.currentUser = user;
+            localStorage.setItem("gastro_current_user", JSON.stringify(user));
+            localStorage.setItem("gastro_last_user_id", user.id);
+            
+            // Wyczyść wpisane hasło po zalogowaniu
+            if (passwordInput) passwordInput.value = "";
+            
+            showToast(translate("welcome_back_toast").replace("{username}", user.username), "success");
+            checkUserLoginState();
+            
+            // If gas API URL is configured, trigger automatic sync pull
+            if (state.gasApiUrl) {
+                terminalLog(`[STARTUP] Commencing auto-pull for ${state.currentUser.username}...`);
+                cloudPullSync(true).catch(e => {});
+            }
+        }
+
+        function logoutUser() {
+            state.currentUser = null;
+            localStorage.removeItem("gastro_current_user");
+            
+            // Hide badge
+            const badge = document.getElementById("header-user-badge");
+            if (badge) {
+                badge.classList.remove("flex");
+                badge.classList.add("hidden");
+            }
+
+            showToast(translate("logged_out_toast"), "info");
+            checkUserLoginState();
+        }
+
+        // --- USER CRUD OPERATIONS ---
+        function renderUsersList() {
+            const container = document.getElementById("users-list-container");
+            if (!container) return;
+
+            container.innerHTML = "";
+            
+            if (state.users.length === 0) {
+                container.innerHTML = `<div class="text-xs text-slate-500 py-3 text-center italic">${translate("no_registered_users")}</div>`;
+                return;
+            }
+
+            state.users.forEach(user => {
+                let roleEmoji = "👷";
+                if (user.role === "admin") roleEmoji = "👑";
+                if (user.role === "manager") roleEmoji = "💼";
+
+                const div = document.createElement("div");
+                div.className = "bg-slate-800/50 p-2.5 rounded-xl border border-slate-700/50 flex items-center justify-between gap-3 text-sm";
+                
+                // Protect default Admin from deletion to prevent lockouts
+                const canDelete = user.id !== 1 && (state.currentUser && state.currentUser.id !== user.id);
+
+                div.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <span class="text-lg">${roleEmoji}</span>
+                        <div>
+                            <span class="font-bold text-white block leading-none mb-0.5">${user.username}</span>
+                            <div class="flex items-center space-x-1.5 mt-0.5">
+                                <span class="text-[10px] text-sky-400 font-mono capitalize">${user.role}</span>
+                                ${user.password ? `<span class="text-[9px] bg-slate-700/80 text-amber-300 font-mono px-1 rounded">${translate("user_password_set")}</span>` : `<span class="text-[9px] bg-slate-900/60 text-slate-500 font-mono px-1 rounded">${translate("user_no_password")}</span>` }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-1">
+                        <button onclick="openUserModal('edit', ${user.id})" class="p-1.5 text-sky-400 hover:bg-sky-950/40 rounded transition-all" title="${translate("edit_user")}">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        </button>
+                        ${canDelete ? `
+                        <button onclick="deleteUser(${user.id})" class="p-1.5 text-rose-450 hover:bg-rose-950/20 rounded transition-all" title="${translate("delete")}">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                        ` : ''}
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function openUserModal(mode = 'add', userId = null) {
+            state.userModalMode = mode;
+            state.editingUserId = userId;
+            
+            const title = document.getElementById("user-modal-title");
+            const nameInput = document.getElementById("modal-user-username");
+            const roleSelect = document.getElementById("modal-user-role");
+            const passwordInput = document.getElementById("modal-user-password");
+
+            if (mode === 'edit') {
+                title.innerText = translate("edit_user");
+                const user = state.users.find(u => u.id === userId);
+                if (user) {
+                    nameInput.value = user.username;
+                    roleSelect.value = user.role;
+                    passwordInput.value = user.password || "";
+                }
+            } else {
+                title.innerText = translate("add_user_title");
+                nameInput.value = "";
+                roleSelect.value = "user";
+                passwordInput.value = "";
+            }
+
+            document.getElementById("user-modal").classList.remove("hidden");
+        }
+
+        function closeUserModal() {
+            document.getElementById("user-modal").classList.add("hidden");
+        }
+
+        async function saveUserModal() {
+            const nameInput = document.getElementById("modal-user-username");
+            const roleSelect = document.getElementById("modal-user-role");
+            const passwordInput = document.getElementById("modal-user-password");
+
+            const username = nameInput.value.trim();
+            const role = roleSelect.value;
+            const password = passwordInput ? passwordInput.value.trim() : "";
+
+            if (!username) {
+                showToast(translate("enter_username"), "warning");
+                return;
+            }
+
+            if (state.userModalMode === 'edit') {
+                const user = state.users.find(u => u.id === state.editingUserId);
+                if (user) {
+                    user.username = username;
+                    user.role = role;
+                    user.password = password;
+                    showToast(translate("user_updated"), "success");
+                }
+            } else {
+                // Generate next ID
+                const nextId = state.users.length > 0 ? Math.max(...state.users.map(u => u.id)) + 1 : 1;
+                state.users.push({
+                    id: nextId,
+                    username: username,
+                    role: role,
+                    password: password
+                });
+                showToast(translate("user_created"), "success");
+            }
+
+            // Save & push list to cloud if GAS is configured
+            localStorage.setItem("gastro_users", JSON.stringify(state.users));
+            closeUserModal();
+            renderUsersList();
+            renderLoginUserSelect();
+
+            if (state.gasApiUrl) {
+                await pushUsersListToCloud().catch(e => {
+                    terminalLog(`[WARN] Syncing users to cloud failed: ${e.message}`);
+                });
+            }
+        }
+
+        function deleteUser(userId) {
+            const user = state.users.find(u => u.id === userId);
+            if (!user) return;
+
+            if (confirm(translate("confirm_delete_user").replace("{username}", user.username))) {
+                state.users = state.users.filter(u => u.id !== userId);
+                localStorage.setItem("gastro_users", JSON.stringify(state.users));
+                showToast(translate("user_deleted_toast"), "success");
+                renderUsersList();
+                renderLoginUserSelect();
+
+                if (state.gasApiUrl) {
+                    pushUsersListToCloud().catch(e => {
+                        terminalLog(`[WARN] Syncing users to cloud failed: ${e.message}`);
+                    });
+                }
+            }
+        }
+
+        // --- CLOUD USER SYNC ---
+        async function pushUsersListToCloud() {
+            if (!state.gasApiUrl) return;
+            terminalLog(`[UPLOAD] Śledzenie struktury użytkowników do chmury (users.json)...`);
+            try {
+                const result = await callGasProxyAPI("upload", "users.json", JSON.stringify(state.users));
+                terminalLog(`[UPLOAD-OK] users.json: ${result.message || 'Zaktualizowano pomyślnie.'}`);
+            } catch (err) {
+                terminalLog(`[ERROR] Nie udało się wysłać użytkowników: ${err.message}`);
+            }
+        }
+
+        async function pullUsersListFromCloud() {
+            if (!state.gasApiUrl) return;
+            terminalLog(`[DOWNLOAD] Pobieranie aktualnej listy użytkowników (users.json)...`);
+            try {
+                const cloudUsers = await callGasProxyAPI("download", "users.json");
+                if (cloudUsers && Array.isArray(cloudUsers)) {
+                    state.users = cloudUsers;
+                    localStorage.setItem("gastro_users", JSON.stringify(state.users));
+                    terminalLog(`[DOWNLOAD-OK] users.json zaimportowane (${state.users.length} profili)`);
+                }
+            } catch (err) {
+                terminalLog(`[WARN] Brak lub błąd pobierania users.json, używam wersji lokalnej: ${err.message}`);
+            }
+        }
+
+        // ====================================================================
+        // UNIFICATION / MERGING ENGINE
+        // ====================================================================
+        async function scanAndLoadCloudUserOrders() {
+            if (!state.gasApiUrl) {
+                showToast(translate("fill_api_configs"), "warning");
+                return;
+            }
+
+            const statusLabel = document.getElementById("cloud-merge-status");
+            const filesList = document.getElementById("cloud-user-files-list");
+            if (statusLabel) {
+                statusLabel.innerText = translate("searching_order_files");
+                statusLabel.classList.remove("hidden");
+            }
+            if (filesList) {
+                filesList.innerHTML = "";
+            }
+
+            state.cloudUserFiles = [];
+            terminalLog("[MERGE] Rozpoczynam skanowanie zamówień pracowników z chmury...");
+
+            let foundCount = 0;
+            // Iterate over all known users
+            for (const user of state.users) {
+                // Nie sczytujemy własnego zamówienia (zalogowanego użytkownika), np. manager nie unifikuje swojego pliku
+                if (state.currentUser && user.username === state.currentUser.username) {
+                    continue;
+                }
+                try {
+                    if (statusLabel) statusLabel.innerText = `${translate("checking") || 'Sprawdzanie'}: ${user.username}...`;
+                    const path = user.username + "/pedido.json";
+                    const data = await callGasProxyAPI("download", path);
+                    
+                    if (data && Array.isArray(data) && data.length > 0) {
+                        foundCount++;
+                        // Find maximum timestamp if any item has it, else use Date.now()
+                        let maxTimestamp = 0;
+                        data.forEach(item => {
+                            if (item.timestamp && item.timestamp > maxTimestamp) {
+                                maxTimestamp = item.timestamp;
+                            }
+                        });
+                        if (maxTimestamp === 0) maxTimestamp = Date.now();
+
+                        state.cloudUserFiles.push({
+                            username: user.username,
+                            orders: data,
+                            timestamp: maxTimestamp
+                        });
+                        terminalLog(`[MERGE] Znaleziono zamówienie dla: ${user.username} (${data.length} pozycji)`);
+                    }
+                } catch (e) {
+                    // Ignore missing files
+                }
+            }
+
+            if (statusLabel) {
+                statusLabel.classList.add("hidden");
+            }
+
+            renderCloudUserFilesList();
+        }
+
+        function renderCloudUserFilesList() {
+            const listContainer = document.getElementById("cloud-user-files-list");
+            if (!listContainer) return;
+
+            listContainer.innerHTML = "";
+
+            if (state.cloudUserFiles.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="text-xs text-slate-500 py-4 italic text-center">
+                        ${translate("no_other_active_orders_cloud")}
+                    </div>
+                `;
+                return;
+            }
+
+            state.cloudUserFiles.forEach((file, index) => {
+                if (state.currentUser && file.username === state.currentUser.username) {
+                    return;
+                }
+                const localeMap = { "pt": "pt-PT", "pl": "pl-PL", "en": "en-US" };
+                const currentLocale = localeMap[state.currentLanguage] || "en-US";
+                const dateStr = new Date(file.timestamp).toLocaleString(currentLocale, { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
+                const div = document.createElement("div");
+                div.className = "bg-slate-800/60 p-3 rounded-xl border border-slate-700/60 flex items-center justify-between gap-3 text-xs";
+                div.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <input type="checkbox" id="merge-chk-${index}" value="${index}" checked class="w-4 h-4 rounded text-teal-600 bg-slate-850 border-slate-700/80 focus:ring-teal-500">
+                        <div>
+                            <span class="block font-bold text-white text-sm leading-none mb-1">${file.username}</span>
+                            <span class="text-[10px] text-slate-400 font-mono">${translate("uploaded_tag")}: ${dateStr} | ${translate("items_count_tag").replace("{count}", file.orders.length)}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="px-2 py-0.5 bg-teal-950 text-teal-300 font-bold font-mono rounded text-[9.5px] uppercase tracking-wider">${translate("ready_status_tag")}</span>
+                        <button onclick="confirmDeleteCloudUserFile('${file.username}')" class="p-1.5 bg-rose-950/40 text-rose-300 border border-rose-900/40 hover:bg-rose-900/50 rounded-lg transition-all" title="${translate("delete_order_cloud_tooltip")}">
+                            🗑️
+                        </button>
+                    </div>
+                `;
+                listContainer.appendChild(div);
+            });
+        }
+
+        async function confirmDeleteCloudUserFile(username) {
+            const confirmed = confirm(translate("confirm_delete_cloud_order_file").replace("{username}", username));
+            if (!confirmed) return;
+
+            showSyncBanner(true);
+            const filepath = username + "/pedido.json";
+            terminalLog(`[GDRIVE] Próba usunięcia pliku z chmury dla: ${username}...`);
+
+            try {
+                const res = await callGasProxyAPI("delete", filepath);
+                if (res && res.success) {
+                    terminalLog(`[GDRIVE-OK] Plik ${filepath} został pomyślnie usunięty z GDrive.`);
+                    showToast(`${translate("user_deleted_toast")} (${username})`, "success");
+                    await scanAndLoadCloudUserOrders();
+                } else {
+                    terminalLog(`[GDRIVE-WARN] Błąd usuwania: ${res ? res.error : 'Brak odpowiedzi'}.`);
+                    // Fallback to empty array
+                    const fallback = confirm(`Niepoprawna odpowiedź chmury przy usuwaniu. Prawdopodobnie stara wersja Apps Script na serwerze Google.\n\nCzy chcesz zamiast tego WYCZYŚCIĆ zamówienie użytkownika ${username}, zastępując je pustym zamówieniem?`);
+                    if (fallback) {
+                        terminalLog(`[GDRIVE-FALLBACK] Czyszczenie pliku przez zapis [] dla pliku: ${filepath}...`);
+                        const cleanRes = await callGasProxyAPI("upload", filepath, "[]");
+                        if (cleanRes && cleanRes.success) {
+                            terminalLog(`[GDRIVE-OK] Zamówienie zostało pomyślnie wyczyszczone w chmurze.`);
+                            showToast(`Wyczyszczono plik dla: ${username}`, "success");
+                            await scanAndLoadCloudUserOrders();
+                        } else {
+                            terminalLog(`[GDRIVE-ERROR] Nie udało się wyczyścić pliku: ${cleanRes ? cleanRes.error : 'Brak odpowiedzi'}`);
+                            showToast(`Błąd czyszczenia pliku`, "error");
+                        }
+                    }
+                }
+            } catch (err) {
+                terminalLog(`[GDRIVE-ERROR] Całkowity błąd przy usuwaniu pliku ${filepath}: ${err.message}`);
+                // Try fallback upload [] directly
+                const fallbackDirect = confirm(`Błąd sieci/CORS przy usuwaniu (${err.message}).\n\nCzy chcesz spróbować bezpośrednio nadpisać plik pustą listą [] poprzez akcję 'upload'?`);
+                if (fallbackDirect) {
+                    try {
+                        terminalLog(`[GDRIVE-FALLBACK] Próba awaryjnego nadpisania pustym JSONem...`);
+                        const cleanRes = await callGasProxyAPI("upload", filepath, "[]");
+                        if (cleanRes && cleanRes.success) {
+                            terminalLog(`[GDRIVE-OK] Awaryjne nadpisanie powiodło się!`);
+                            showToast(`Wyczyszczono plik dla: ${username}`, "success");
+                            await scanAndLoadCloudUserOrders();
+                        } else {
+                            terminalLog(`[GDRIVE-ERROR] Awaryjne nadpisanie również nie powiodło się.`);
+                            showToast(`Błąd zapisu pliku`, "error");
+                        }
+                    } catch (uploadErr) {
+                        terminalLog(`[GDRIVE-ERROR] Błąd krytyczny przy awaryjnym czyszczeniu: ${uploadErr.message}`);
+                    }
+                }
+            } finally {
+                showSyncBanner(false);
+            }
+        }
+
+        async function executeMerge() {
+            const selectedIndices = [];
+            state.cloudUserFiles.forEach((file, index) => {
+                const chk = document.getElementById(`merge-chk-${index}`);
+                if (chk && chk.checked) {
+                    selectedIndices.push(index);
+                }
+            });
+
+            if (selectedIndices.length === 0) {
+                showToast(translate("select_at_least_one_order"), "warning");
+                return;
+            }
+
+            // Zapytaj o usunięcie plików z chmury po mergu
+            const deleteAfterMerge = confirm(translate("confirm_delete_after_merge"));
+
+            terminalLog(`[MERGE] Rozpoczynam łączenie ${selectedIndices.length} list zakupowych...`);
+
+            if (!state.orders) {
+                state.orders = {};
+            }
+
+            let totalItemsMerged = 0;
+            let totalQtyAdded = 0;
+
+            selectedIndices.forEach(idx => {
+                const file = state.cloudUserFiles[idx];
+                file.orders.forEach(item => {
+                    const prodId = parseInt(item.id);
+                    if (!prodId) return;
+
+                    const itemTimestamp = item.timestamp || file.timestamp || 0;
+                    const existing = state.orders[prodId];
+
+                    if (!existing) {
+                        state.orders[prodId] = {
+                            quantidade: item.quantidade || 0,
+                            prioridade: item.prioridade || "Normal",
+                            timestamp: itemTimestamp
+                        };
+                        totalItemsMerged++;
+                        totalQtyAdded += (item.quantidade || 0);
+                    } else {
+                        const existingTimestamp = existing.timestamp || 0;
+                        if (itemTimestamp > existingTimestamp) {
+                            totalQtyAdded = totalQtyAdded - existing.quantidade + (item.quantidade || 0);
+                            existing.quantidade = item.quantidade || 0;
+                            existing.prioridade = item.prioridade || "Normal";
+                            existing.timestamp = itemTimestamp;
+                        }
+                    }
+                });
+            });
+
+            saveOrdersToLocalStorage();
+            
+            // Re-render
+            filterProducts();
+            renderCatalog();
+            
+            if (typeof updateReportView === "function") {
+                updateReportView();
+            }
+
+            terminalLog(`[SUCCESS] Połączono listy pomyślnie na podstawie najnowszych dat modyfikacji (timestamp). Łączna ilość pozycji: ${Object.keys(state.orders).length}.`);
+            showToast(translate("merged_orders_count").replace("{count}", selectedIndices.length), "success");
+
+            // Automatyczny zapis połączonego zamówienia (pedido) na GDrive
+            terminalLog(`[MERGE] Automatycznie zapisuję połączone zamówienie do chmury GDrive...`);
+            try {
+                await cloudPushSync("pedido", false);
+                terminalLog(`[MERGE] Połączone zamówienie pomyślnie wysłane do GDrive.`);
+            } catch (err) {
+                terminalLog(`[MERGE-ERROR] Nie udało się automatycznie zsynchronizować połączonego zamówienia: ${err.message}`);
+            }
+
+            // Jeśli wybrano usunięcie plików użytkowników z chmury po mergu
+            if (deleteAfterMerge) {
+                terminalLog(`[MERGE] Rozpoczynam usuwanie połączonych zamówień z chmury...`);
+                showSyncBanner(true, "Usuwanie zamówień...");
+                for (const idx of selectedIndices) {
+                    const file = state.cloudUserFiles[idx];
+                    const filepath = file.username + "/pedido.json";
+                    try {
+                        terminalLog(`[MERGE] Usuwanie pliku chmury dla: ${file.username}...`);
+                        let deleteSuccess = false;
+                        try {
+                            const res = await callGasProxyAPI("delete", filepath);
+                            if (res && res.success) {
+                                terminalLog(`[MERGE-OK] Plik usunięty pomyślnie z GDrive: ${filepath}`);
+                                deleteSuccess = true;
+                            } else {
+                                terminalLog(`[MERGE-WARN] Serwer nie usunął pliku ${filepath}: ${res ? res.error : 'Brak odpowiedzi'}`);
+                            }
+                        } catch (deleteError) {
+                            terminalLog(`[MERGE-WARN] Żądanie 'delete' nie powiodło się (${deleteError.message}). Prawdopodobnie stara wersja Apps Script.`);
+                        }
+
+                        if (!deleteSuccess) {
+                            terminalLog(`[MERGE-FALLBACK] Nadpisuję plik ${filepath} pustym zamówieniem '[]'...`);
+                            const fallbackRes = await callGasProxyAPI("upload", filepath, "[]");
+                            if (fallbackRes && fallbackRes.success) {
+                                terminalLog(`[MERGE-OK] Pomyślnie wyczyszczono plik dla ${file.username} (nadpisano pustym zamówieniem).`);
+                            } else {
+                                terminalLog(`[MERGE-ERROR] Nie udało się wyczyścić pliku ${filepath}: ${fallbackRes ? fallbackRes.error : 'Brak odpowiedzi'}`);
+                            }
+                        }
+                    } catch (err) {
+                        terminalLog(`[MERGE-ERROR] Całkowity błąd przy próbie usunięcia/wyczyszczenia pliku ${filepath}: ${err.message}`);
+                    }
+                }
+                showSyncBanner(false);
+                terminalLog(`[MERGE] Zakończono usuwanie połączonych zamówień z chmury.`);
+                
+                // Odśwież listę plików z chmury
+                await scanAndLoadCloudUserOrders();
             }
         }
 
@@ -2319,20 +3122,41 @@
         // ====================================================================
         let deferredPrompt = null;
 
-        // Register Service Worker for offline operations
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then((registration) => {
-                        console.log('PWA Service Worker registered with scope:', registration.scope);
-                        setTimeout(() => {
-                            terminalLog("[PWA] Service Worker zarejestrowany! / Registrado! (Offline Ready 🥬)");
-                        }, 2000);
-                    })
-                    .catch((err) => {
-                        console.error('PWA Service Worker registration failed:', err);
-                    });
-            });
+        // Dynamic Manifest & Service Worker registration based on protocol (suppresses file:// CORS errors)
+        const isLocalFileMode = window.location.protocol === 'file:';
+
+        if (isLocalFileMode) {
+            console.warn('[PWA] Application running via file:// protocol. PWA manifest & Service Worker disabled to prevent CORS/security blocks.');
+            setTimeout(() => {
+                terminalLog("⚠️ [SYS] Aplikacja uruchomiona bezpośrednio z pliku (file://). Funkcje PWA, powiadomienia i Service Worker zostały wyłączone ze względów bezpieczeństwa CORS przeglądarki.");
+            }, 1500);
+        } else {
+            // Dynamically load Manifest
+            try {
+                const manifestLink = document.createElement('link');
+                manifestLink.rel = 'manifest';
+                manifestLink.href = 'manifest.json';
+                document.head.appendChild(manifestLink);
+                console.log('[PWA] Manifest link injected dynamically.');
+            } catch (e) {
+                console.error('[PWA] Dynamic manifest insertion failed:', e);
+            }
+
+            // Register Service Worker for offline operations
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('./sw.js')
+                        .then((registration) => {
+                            console.log('PWA Service Worker registered with scope:', registration.scope);
+                            setTimeout(() => {
+                                terminalLog("[PWA] Service Worker zarejestrowany! / Registrado! (Offline Ready 🥬)");
+                            }, 2000);
+                        })
+                        .catch((err) => {
+                            console.error('PWA Service Worker registration failed:', err);
+                        });
+                });
+            }
         }
 
         // Intercept native browser install prompt (Chrome/Edge/Android)

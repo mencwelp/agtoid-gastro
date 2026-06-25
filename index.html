@@ -136,7 +136,7 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                     <span data-l10n="tab_relatorio">Relatório</span>
                 </button>
-                <button onclick="switchTab(4)" class="nav-sidebar-btn w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all text-left">
+                <button onclick="switchTab(4)" id="nav-btn-gdrive-desktop" class="nav-sidebar-btn w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all text-left">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg>
                     <span data-l10n="tab_gdrive">G-Drive Sync</span>
                 </button>
@@ -167,34 +167,34 @@
             </div>
 
             <!-- Header indicators (online states and mobile language changer) -->
-            <div class="flex flex-col items-end space-y-1.5">
-    
-    <!-- User Profile Label -->
-    <div id="header-user-badge" class="hidden items-center space-x-1.5 px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-[10.5px] text-slate-300">
-        <span>👤</span>
-        <span id="header-user-name" class="font-extrabold text-sky-400">Admin</span>
-        <button onclick="logoutUser()" class="ml-1.5 text-slate-400 hover:text-white transition-all text-xs" title="Logout">🚪</button>
-    </div>
+            <div class="flex flex-col items-end space-y-1.2">
+                
+                <!-- User Profile Label -->
+                <div id="header-user-badge" class="hidden items-center space-x-1.5 px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-[10.5px] text-slate-300">
+                    <span>👤</span>
+                    <span id="header-user-name" class="font-extrabold text-sky-400">Admin</span>
+                    <button onclick="logoutUser()" class="ml-1.5 text-slate-400 hover:text-white transition-all text-xs" title="Logout">🚪</button>
+                </div>
 
-    <!-- Bottom row: Sync status and Language -->
-    <div class="flex items-center space-x-1.5">
-        
-        <!-- Sync status pills -->
-        <div id="cloud-status-badge" class="flex items-center space-x-1.5 px-2 py-1 rounded bg-slate-800 border border-slate-700 text-[10px] text-slate-400 uppercase tracking-widest leading-none font-bold">
-            <span class="w-1.5 h-1.5 rounded-full bg-slate-500 inline-block" id="cloud-status-dot"></span>
-            <span id="cloud-status-text" data-l10n="offline">Offline</span>
-        </div>
+                <!-- Bottom row: Sync status and Language -->
+                <div class="flex items-center space-x-1.5">
+                    
+                    <!-- Sync status pills -->
+                    <div id="cloud-status-badge" class="flex items-center space-x-1.5 px-2 py-1 rounded bg-slate-800 border border-slate-700 text-[10px] text-slate-400 uppercase tracking-widest leading-none font-bold">
+                        <span class="w-1.5 h-1.5 rounded-full bg-slate-500 inline-block" id="cloud-status-dot"></span>
+                        <span id="cloud-status-text" data-l10n="offline">Offline</span>
+                    </div>
 
-        <!-- Language Selector for Mobile -->
-        <div class="md:hidden">
-            <select onchange="changeLanguage(this.value)" id="lang-select-mobile" class="bg-slate-800 text-xs border border-slate-700/80 rounded px-1.5 py-1 text-sky-400 font-bold">
-                <option value="pt">PT</option>
-                <option value="pl">PL</option>
-                <option value="en">EN</option>
-            </select>
-        </div>
-    </div>
-</div>
+                    <!-- Language Selector for Mobile -->
+                    <div class="md:hidden">
+                        <select onchange="changeLanguage(this.value)" id="lang-select-mobile" class="bg-slate-800 text-xs border border-slate-700/80 rounded px-1.5 py-1 text-sky-400 font-bold">
+                            <option value="pt">PT</option>
+                            <option value="pl">PL</option>
+                            <option value="en">EN</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
         </header>
 
         <!-- LIVE NOTIFICATION / SYNC STATE BANNER -->
@@ -307,18 +307,6 @@
             <!-- TAB 3: RELATORIO (REPORTS) -->
             <section id="tab-view-3" class="tab-view hidden space-y-4">
                 
-                <!-- Aggregate Stats Bar -->
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-gradient-to-br from-slate-900 to-slate-850 rounded-2xl p-4 border border-slate-800">
-                        <span class="text-[10px] text-slate-400 uppercase tracking-widest font-bold block mb-1">Total Ordered Products</span>
-                        <div class="text-2xl font-black text-sky-400 monospace" id="report-items-count">0</div>
-                    </div>
-                    <div class="bg-gradient-to-br from-slate-900 to-slate-850 rounded-2xl p-4 border border-slate-800">
-                        <span class="text-[10px] text-slate-400 uppercase tracking-widest font-bold block mb-1" data-l10n="urgent">Urgente</span>
-                        <div class="text-2xl font-black text-rose-500 monospace" id="report-urgent-count">0</div>
-                    </div>
-                </div>
-
                 <!-- MERGE USER ORDERS COMPONENT -->
                 <div id="merge-orders-panel" class="hidden bg-slate-900 rounded-2xl p-4 border border-slate-800 space-y-4 shadow-xl">
                     <div class="flex items-center justify-between pb-2 border-b border-slate-800">
@@ -346,6 +334,18 @@
                         <button onclick="executeMerge()" id="btn-execute-merge" class="w-full py-2.5 bg-gradient-to-r from-teal-600 to-sky-600 hover:from-teal-500 hover:to-sky-500 text-white font-extrabold rounded-xl shadow-lg transition-all text-sm uppercase tracking-wider" data-l10n="merge_checked_btn">
                             Połącz zaznaczone zamówienia (Merge)
                         </button>
+                    </div>
+                </div>
+
+                <!-- Aggregate Stats Bar -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-gradient-to-br from-slate-900 to-slate-850 rounded-2xl p-4 border border-slate-800">
+                        <span class="text-[10px] text-slate-400 uppercase tracking-widest font-bold block mb-1">Total Ordered Products</span>
+                        <div class="text-2xl font-black text-sky-400 monospace" id="report-items-count">0</div>
+                    </div>
+                    <div class="bg-gradient-to-br from-slate-900 to-slate-850 rounded-2xl p-4 border border-slate-800">
+                        <span class="text-[10px] text-slate-400 uppercase tracking-widest font-bold block mb-1" data-l10n="urgent">Urgente</span>
+                        <div class="text-2xl font-black text-rose-500 monospace" id="report-urgent-count">0</div>
                     </div>
                 </div>
 
@@ -439,20 +439,6 @@
                             <input type="password" id="gdrive-security-token" placeholder="SECURITY_TOKEN wprowadzony w Code.gs..." class="w-full bg-slate-850 text-slate-100 placeholder-slate-600 border border-slate-700/60 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-sky-500 monospace font-medium">
                         </div>
 
-                        <!-- Mode selection selection -->
-                        <div class="pt-2">
-                            <span class="block text-[10px] uppercase font-bold text-slate-400 mb-1.5" data-l10n="active_op_mode">Aktywny tryb operacyjny</span>
-                            <div class="grid grid-cols-2 gap-2">
-                                <button onclick="setSyncMode('MASTER')" id="sync-mode-master" class="py-2.5 rounded-xl text-xs font-extrabold uppercase border-2 border-slate-700 text-slate-400 transition-all flex flex-col items-center">
-                                    <span>👑 ADMIN/MASTER</span>
-                                    <span class="text-[9px] lowercase font-normal text-slate-500 mt-0.5">Read/Write all files</span>
-                                </button>
-                                <button onclick="setSyncMode('USER')" id="sync-mode-user" class="py-2.5 rounded-xl text-xs font-extrabold uppercase border-2 border-slate-700 text-slate-400 transition-all flex flex-col items-center">
-                                    <span>👷 PRACOWNIK/USER</span>
-                                    <span class="text-[9px] lowercase font-normal text-slate-500 mt-0.5 font-sans">Read catalog, submit order only</span>
-                                </button>
-                            </div>
-                        </div>
 
                         <div class="pt-1.5 flex gap-2">
                             <button onclick="saveSyncSettings()" class="flex-1 py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-extrabold rounded-xl shadow transition-all text-xs" data-l10n="save">
@@ -513,6 +499,24 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Android APK Download Panel -->
+                    <div class="mt-5 pt-5 border-t border-slate-800/80 space-y-3">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xl">🤖</span>
+                            <div>
+                                <span class="block text-sm font-bold text-white uppercase tracking-wider">Aplikacja Mobilna Android (APK)</span>
+                                <span class="text-[10px] text-slate-400 font-medium uppercase tracking-wide">Pobierz oficjalny plik instalacyjny (.apk)</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-300 leading-relaxed font-sans">
+                            Zamiast wersji przeglądarkowej możesz zainstalować tradycyjną, bardzo szybką aplikację na swoim telefonie z systemem Android. Plik ma rozmiar <strong>22.72 MB</strong> i zawiera najnowsze zmiany.
+                        </p>
+                        <a href="gastro-app-debug.apk" download="gastro-app-debug.apk" class="w-full py-2.5 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-extrabold rounded-xl shadow-lg transition-all text-xs uppercase tracking-widest flex items-center justify-center space-x-2 cursor-pointer no-underline block text-center">
+                            <span>⬇️</span>
+                            <span>Pobierz gastro-app-debug.apk (22.72 MB)</span>
+                        </a>
+                    </div>
                 </div>
 
                 <!-- Logs console Panel output terminal -->
@@ -552,7 +556,7 @@
                 <span class="text-[9px] text-slate-400 mt-1 font-bold" data-l10n="tab_relatorio">Relatório</span>
                 <span id="nav-indicator-3" class="active-indicator hidden"></span>
             </button>
-            <button onclick="switchTab(4)" class="nav-tab-btn flex flex-col items-center flex-1 py-1 relative">
+            <button onclick="switchTab(4)" id="nav-btn-gdrive-mobile" class="nav-tab-btn flex flex-col items-center flex-1 py-1 relative">
                 <span class="text-xl">☁️</span>
                 <span class="text-[9px] text-slate-400 mt-1 font-bold" data-l10n="tab_gdrive">Sync</span>
                 <span id="nav-indicator-4" class="active-indicator hidden"></span>
@@ -803,7 +807,7 @@
             "delete": { pt: "Excluir", pl: "Usuń", en: "Delete" },
             "search_placeholder": { pt: "Pesquisar produto...", pl: "Szukaj produktu...", en: "Search product..." },
             "limiar_filter_label": { pt: "Com Quantidade", pl: "Tylko wybrane", en: "With quantity" },
-            "limpiar_label": { pt: "Limpar", pl: "Wyczyść", en: "Clear" },
+            "limpiar_label": { pt: "Wyczyść", pl: "Wyczyść", en: "Clear" },
             "tab_encomendas": { pt: "Encomenda", pl: "Zamówienia", en: "Orders" },
             "tab_catalogo": { pt: "Catálogo", pl: "Katalog", en: "Catalog" },
             "tab_categorias": { pt: "Categorias", pl: "Kategorie", en: "Categories" },
@@ -866,7 +870,7 @@
             "confirm_clear_order": { pt: "Deseja realmente limpar todo o carrinho de compras atual?", pl: "Czy na pewno chcesz wyczyścić cały koszyk zakupowy?", en: "Are you sure you want to clear the entire shopping cart?" },
             "confirm_reset_catalog": { pt: "Isso irá redefinir o catálogo para as configurações originais e excluir todas as personalizações. Confirmar?", pl: "Spowoduje to przywrócenie katalogu do ustawień pierwotnych i usunięcie wszystkich zmian. Czy chcesz kontynuować?", en: "This will reset the catalog to native settings and erase custom changes. Continue?" },
             "confirm_delete_after_merge": { pt: "Deseja APAGAR as encomendas integradas dos funcionários do servidor Google Drive após o merge?", pl: "Czy po pomyślnym połączeniu (Merge) chcesz USUNĄĆ pliki zamówień tych pracowników z chmury?", en: "Do you want to DELETE employee order files from Google Drive after a successful merge?" },
-            "sync_active_order": { pt: "Salvar / Syncronizar (GDrive)", pl: "Zapisz / Synchronizuj z GDrive", en: "Save / Sync with GDrive" },
+            "sync_active_order": { pt: "Zapisz / Sincronizar (GDrive)", pl: "Zapisz / Synchronizuj z GDrive", en: "Save / Sync with GDrive" },
             "login_system_title": { pt: "Sistema de Autenticação", pl: "System Logowania", en: "Login System" },
             "login_user_profile": { pt: "Perfil de utilizador:", pl: "Profil użytkownika:", en: "User profile:" },
             "login_password_pin": { pt: "Palavra-passe / PIN (Opcional):", pl: "Hasło / PIN (Opcjonalnie):", en: "Password / PIN (Optional):" },
@@ -2482,12 +2486,26 @@
                 }
 
                 // Sync appMode with roles
-                if (hasWritePrivileges()) {
+                if (state.currentUser.role === "admin") {
                     state.appMode = "MASTER";
                 } else {
                     state.appMode = "USER";
                 }
                 localStorage.setItem("gastro_app_mode", state.appMode);
+
+                // Show/hide G-Drive Sync Tab in sidebar/navigation
+                const desktopGDriveBtn = document.getElementById("nav-btn-gdrive-desktop");
+                const mobileGDriveBtn = document.getElementById("nav-btn-gdrive-mobile");
+                if (state.currentUser.role === "admin") {
+                    if (desktopGDriveBtn) desktopGDriveBtn.classList.remove("hidden");
+                    if (mobileGDriveBtn) mobileGDriveBtn.classList.remove("hidden");
+                } else {
+                    if (desktopGDriveBtn) desktopGDriveBtn.classList.add("hidden");
+                    if (mobileGDriveBtn) mobileGDriveBtn.classList.add("hidden");
+                    if (state.activeTab === 4) {
+                        switchTab(0);
+                    }
+                }
 
                 // Load orders for this specific user
                 const userKey = "gastro_orders_" + state.currentUser.username;
@@ -2965,8 +2983,11 @@
                         if (itemTimestamp > existingTimestamp) {
                             totalQtyAdded = totalQtyAdded - existing.quantidade + (item.quantidade || 0);
                             existing.quantidade = item.quantidade || 0;
-                            existing.prioridade = item.prioridade || "Normal";
                             existing.timestamp = itemTimestamp;
+                        }
+                        // Priority rule: if ANY linked item has priority status set (Urgente), result must have priority
+                        if (item.prioridade === "Urgente") {
+                            existing.prioridade = "Urgente";
                         }
                     }
                 });
